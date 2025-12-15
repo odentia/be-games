@@ -14,6 +14,11 @@ class GameRepository(Protocol):
         search: Optional[str] = None,
         platform: Optional[str] = None,
         genre: Optional[str] = None,
+        age_rating: Optional[str] = None,
+        year_from: Optional[int] = None,
+        year_to: Optional[int] = None,
+        rating_from: Optional[float] = None,
+        rating_to: Optional[float] = None,
         limit: int = 20,
         offset: int = 0,
     ) -> List[Game]:
@@ -25,6 +30,11 @@ class GameRepository(Protocol):
         search: Optional[str] = None,
         platform: Optional[str] = None,
         genre: Optional[str] = None,
+        age_rating: Optional[str] = None,
+        year_from: Optional[int] = None,
+        year_to: Optional[int] = None,
+        rating_from: Optional[float] = None,
+        rating_to: Optional[float] = None,
     ) -> int:
         ...
 

@@ -46,9 +46,14 @@ class GameDetailResponse(BaseModel):
 
 
 class GameQuery(BaseModel):
-    search: Optional[str] = None
-    platform: Optional[str] = None
-    genre: Optional[str] = None
+    search: Optional[str] = Field(default=None, description="Поиск по названию игры")
+    platform: Optional[str] = Field(default=None, description="Фильтр по платформе")
+    genre: Optional[str] = Field(default=None, description="Фильтр по жанру/категории")
+    age_rating: Optional[str] = Field(default=None, description="Фильтр по возрастному рейтингу (ESRB)")
+    year_from: Optional[int] = Field(default=None, ge=1900, le=2100, description="Год выпуска от")
+    year_to: Optional[int] = Field(default=None, ge=1900, le=2100, description="Год выпуска до")
+    rating_from: Optional[float] = Field(default=None, ge=0.0, le=5.0, description="Рейтинг от")
+    rating_to: Optional[float] = Field(default=None, ge=0.0, le=5.0, description="Рейтинг до")
     page: int = Field(default=1, ge=1)
     page_size: int = Field(default=20, ge=1, le=100)
 

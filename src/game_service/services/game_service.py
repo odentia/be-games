@@ -23,6 +23,11 @@ class GameAppService:
             search=query.search,
             platform=query.platform,
             genre=query.genre,
+            age_rating=query.age_rating,
+            year_from=query.year_from,
+            year_to=query.year_to,
+            rating_from=query.rating_from,
+            rating_to=query.rating_to,
             limit=query.page_size,
             offset=offset,
         )
@@ -30,6 +35,11 @@ class GameAppService:
             search=query.search,
             platform=query.platform,
             genre=query.genre,
+            age_rating=query.age_rating,
+            year_from=query.year_from,
+            year_to=query.year_to,
+            rating_from=query.rating_from,
+            rating_to=query.rating_to,
         )
         items = [
             GameListItem(
