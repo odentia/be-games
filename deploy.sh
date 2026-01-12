@@ -12,4 +12,3 @@ docker-compose run --rm game-service uv run alembic upgrade head || true
 docker-compose up -d
 sleep 5
 docker-compose ps
-
