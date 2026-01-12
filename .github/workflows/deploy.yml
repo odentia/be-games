@@ -20,9 +20,38 @@ jobs:
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           port: ${{ secrets.DEPLOY_PORT || 22 }}
-          debug: true
           script: |
-            cd /home/${{ secrets.DEPLOY_USER }}/game-service || cd ~/game-service
+            mkdir -p ~/game-service
+            cd ~/game-service
+            
+            cat > docker-compose.yml << 'EOF'
+            version: '3.8'
+            services:
+              game-service:
+                image: ghcr.io/${{ github.repository_owner }}/game-service:latest
+                container_name: game-service
+                restart: unless-stopped
+                ports:
+                  - "8010:8010"
+                environment:
+                  - DATABASE_URL=${DATABASE_URL}
+                  - ALEMBIC_DATABASE_URL=${ALEMBIC_DATABASE_URL}
+                  - RAWG_API_KEY=${RAWG_API_KEY}
+                  - LOG_LEVEL=${LOG_LEVEL:-INFO}
+                networks:
+                  - game-service-network
+            networks:
+              game-service-network:
+                driver: bridge
+            EOF
+            
+            cat > .env << EOF
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
+            ALEMBIC_DATABASE_URL=${{ secrets.ALEMBIC_DATABASE_URL }}
+            RAWG_API_KEY=${{ secrets.RAWG_API_KEY }}
+            LOG_LEVEL=INFO
+            EOF
+            
             docker compose pull
             docker compose run --rm game-service uv run alembic upgrade head || echo "Migration failed or not needed"
             docker compose up -d

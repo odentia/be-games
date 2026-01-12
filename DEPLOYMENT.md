@@ -8,6 +8,9 @@ Settings → Secrets and variables → Actions → New repository secret:
 - **DEPLOY_USER** - пользователь SSH (например: `root`, `deploy`)
 - **DEPLOY_SSH_KEY** - приватный SSH ключ (`~/.ssh/id_rsa`)
 - **DEPLOY_PORT** (опционально) - SSH порт, по умолчанию 22
+- **DATABASE_URL** - строка подключения к базе данных (например: `postgresql+asyncpg://user:password@host:5432/games`)
+- **ALEMBIC_DATABASE_URL** - строка подключения для миграций (например: `postgresql://user:password@host:5432/games`)
+- **RAWG_API_KEY** - API ключ от RAWG API
 
 ## Первоначальная настройка (один раз)
 
@@ -52,43 +55,9 @@ ssh -i ~/.ssh/id_rsa ваш-пользователь@ваш-сервер
 - Убедитесь, что нет лишних пробелов в начале/конце
 - В GitHub Secrets вставьте ключ как есть, одной строкой или многострочным текстом (оба варианта работают)
 
-**2. На сервере создайте директорию и файлы:**
+**2. Файлы создаются автоматически**
 
-```bash
-ssh ваш-пользователь@ваш-сервер
-mkdir -p ~/game-service
-cd ~/game-service
-```
-
-Создайте `docker-compose.yml` (замените `YOUR_GITHUB_USERNAME` на ваш GitHub username):
-```yaml
-version: '3.8'
-services:
-  game-service:
-    image: ghcr.io/YOUR_GITHUB_USERNAME/game-service:latest
-    container_name: game-service
-    restart: unless-stopped
-    ports:
-      - "8010:8010"
-    environment:
-      - DATABASE_URL=${DATABASE_URL}
-      - ALEMBIC_DATABASE_URL=${ALEMBIC_DATABASE_URL}
-      - RAWG_API_KEY=${RAWG_API_KEY}
-      - LOG_LEVEL=${LOG_LEVEL:-INFO}
-    networks:
-      - game-service-network
-networks:
-  game-service-network:
-    driver: bridge
-```
-
-Создайте `.env`:
-```env
-DATABASE_URL=postgresql+asyncpg://user:password@host:5432/games
-ALEMBIC_DATABASE_URL=postgresql://user:password@host:5432/games
-RAWG_API_KEY=your_rawg_api_key
-LOG_LEVEL=INFO
-```
+На сервере ничего делать не нужно - workflow автоматически создаст все необходимые файлы (`docker-compose.yml` и `.env`) при первом деплое.
 
 ## Деплой
 
