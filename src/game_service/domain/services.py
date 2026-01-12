@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import List
 
 from game_service.domain.models import Game, Genre, Platform, Screenshot
 

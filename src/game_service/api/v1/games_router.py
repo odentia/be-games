@@ -1,13 +1,10 @@
 from __future__ import annotations
 
-import traceback
-
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException
 
 from game_service.dtos.http import (
     GameDetailResponse,
     GameListResponse,
-    GameListItem,
     GameQuery,
     SyncGameRequest,
     SyncBatchRequest,

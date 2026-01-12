@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from contextlib import asynccontextmanager
 from typing import Annotated, AsyncIterator
 
 from fastapi import Depends, Request
@@ -8,7 +7,6 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from game_service.clients.rawg_client import RAWGClient
 from game_service.core.config import Settings
-from game_service.core.db import get_session_factory
 from game_service.services.game_service import GameAppService
 from game_service.repo.sql.repositories import SQLGameRepository
 
