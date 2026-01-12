@@ -63,3 +63,24 @@ LOG_LEVEL=INFO
 После настройки: при push в `main`/`master` автоматически запускается сборка и деплой.
 
 Вручную: Actions → Build and Push Docker images to GHCR → Run workflow
+
+## Проверка деплоя на сервере
+
+Подключитесь к серверу через VNC/SSH и выполните:
+
+```bash
+# Проверка статуса контейнера
+docker compose ps
+
+# Просмотр логов
+docker compose logs game-service
+
+# Просмотр последних логов в реальном времени
+docker compose logs -f --tail=50 game-service
+
+# Проверка, что сервис отвечает
+curl http://localhost:8010/docs
+
+# Или через браузер (если есть доступ):
+# http://ваш-ip-сервера:8010/docs
+```
