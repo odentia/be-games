@@ -50,7 +50,7 @@ async def list_age_ratings(
 ):
     """
     Получить список всех доступных возрастных рейтингов (ESRB).
-    
+
     Примеры рейтингов: "Everyone", "Everyone 10+", "Teen", "Mature", "Adults Only", "Rating Pending"
     """
     try:
@@ -60,4 +60,3 @@ async def list_age_ratings(
     except Exception as e:
         log.error(f"Error in list_age_ratings: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
-

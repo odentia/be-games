@@ -1,6 +1,11 @@
 from __future__ import annotations
 
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 
 from game_service.core.logging import get_logger
 
@@ -25,6 +30,7 @@ def init_session_factory(engine: AsyncEngine) -> async_sessionmaker[AsyncSession
         log.info("session factory ready")
     return _session_factory
 
+
 async def close_engine(engine: AsyncEngine | None = None) -> None:
     global _engine, _session_factory
     target = engine or _engine
@@ -33,6 +39,7 @@ async def close_engine(engine: AsyncEngine | None = None) -> None:
         _engine = None
         _session_factory = None
         log.info("database engine closed")
+
 
 def get_session_factory() -> async_sessionmaker[AsyncSession] | None:
     return _session_factory

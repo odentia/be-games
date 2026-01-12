@@ -62,7 +62,9 @@ class GameAppService:
             game = await self.game_repo.get_by_slug(identifier)
         return self._to_detail_response(game) if game else None
 
-    async def sync_game(self, *, rawg_id: Optional[int] = None, slug: Optional[str] = None) -> GameDetailResponse:
+    async def sync_game(
+        self, *, rawg_id: Optional[int] = None, slug: Optional[str] = None
+    ) -> GameDetailResponse:
         data = await self.rawg_client.fetch_game(slug=slug, rawg_id=rawg_id)
         screenshots_data = await self.rawg_client.fetch_screenshots(data["id"])
         data["short_screenshots"] = screenshots_data.get("results", [])
@@ -82,19 +84,19 @@ class GameAppService:
     ) -> dict:
         """
         Массовая синхронизация игр из RAWG API.
-        
+
         Стратегия:
         - Использует дешевый запрос list_games (1 запрос на страницу)
         - Сохраняет краткую информацию об играх
         - Опционально загружает детали для популярных игр (если load_details=True)
-        
+
         Args:
             start_page: Начальная страница для синхронизации
             pages: Количество страниц для синхронизации
             page_size: Размер страницы (максимум 40 для RAWG)
             load_details: Загружать ли детальную информацию (дорого - 2 запроса на игру)
             details_limit: Максимум игр для загрузки деталей (0 = все)
-        
+
         Returns:
             dict с статистикой синхронизации
         """
@@ -114,17 +116,17 @@ class GameAppService:
             requests_used += 1
 
             games_list = list_data.get("results", [])
-            
+
             # Сохраняем игры из списка (краткая информация)
             for game_data in games_list:
                 domain_game = GameFactory.from_rawg_list_item(game_data)
                 domain_game.id = str(domain_game.rawg_id) or domain_game.slug
-                
+
                 # Проверяем, существует ли игра с деталями
                 existing = await self.game_repo.get_by_id(domain_game.id)
                 is_new = existing is None
                 has_details = existing is not None and existing.description is not None
-                
+
                 # Сохраняем только если игра новая или нет деталей
                 if is_new or not has_details:
                     await self.game_repo.upsert_game(domain_game)
@@ -132,15 +134,21 @@ class GameAppService:
                         total_new += 1
                     else:
                         total_updated += 1
-                
+
                 total_synced += 1
 
                 # Загружаем детали для популярных игр (если нужно и ещё нет деталей)
-                if load_details and not has_details and (details_limit == 0 or details_loaded < details_limit):
+                if (
+                    load_details
+                    and not has_details
+                    and (details_limit == 0 or details_loaded < details_limit)
+                ):
                     try:
                         # Загружаем детали (2 запроса: game + screenshots)
                         full_data = await self.rawg_client.fetch_game(rawg_id=domain_game.rawg_id)
-                        screenshots_data = await self.rawg_client.fetch_screenshots(domain_game.rawg_id)
+                        screenshots_data = await self.rawg_client.fetch_screenshots(
+                            domain_game.rawg_id
+                        )
                         full_data["short_screenshots"] = screenshots_data.get("results", [])
                         full_game = GameFactory.from_rawg(full_data)
                         full_game.id = domain_game.id

@@ -28,11 +28,15 @@ async def get_session(request: Request) -> AsyncIterator[AsyncSession]:
         yield session
 
 
-def get_game_repository(session: Annotated[AsyncSession, Depends(get_session)]) -> SQLGameRepository:
+def get_game_repository(
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> SQLGameRepository:
     return SQLGameRepository(session)
 
 
-async def get_rawg_client(settings: Annotated[Settings, Depends(get_settings)]) -> AsyncIterator[RAWGClient]:
+async def get_rawg_client(
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> AsyncIterator[RAWGClient]:
     client = RAWGClient(settings.rawg_base_url, settings.rawg_api_key)
     try:
         yield client

@@ -49,7 +49,9 @@ class GameQuery(BaseModel):
     search: Optional[str] = Field(default=None, description="Поиск по названию игры")
     platform: Optional[str] = Field(default=None, description="Фильтр по платформе")
     genre: Optional[str] = Field(default=None, description="Фильтр по жанру/категории")
-    age_rating: Optional[str] = Field(default=None, description="Фильтр по возрастному рейтингу (ESRB)")
+    age_rating: Optional[str] = Field(
+        default=None, description="Фильтр по возрастному рейтингу (ESRB)"
+    )
     year_from: Optional[int] = Field(default=None, ge=1900, le=2100, description="Год выпуска от")
     year_to: Optional[int] = Field(default=None, ge=1900, le=2100, description="Год выпуска до")
     rating_from: Optional[float] = Field(default=None, ge=0.0, le=5.0, description="Рейтинг от")
@@ -71,8 +73,12 @@ class SyncBatchRequest(BaseModel):
     start_page: int = Field(default=1, ge=1, description="Начальная страница для синхронизации")
     pages: int = Field(default=1, ge=1, le=500, description="Количество страниц для синхронизации")
     page_size: int = Field(default=40, ge=1, le=40, description="Размер страницы (максимум 40)")
-    load_details: bool = Field(default=False, description="Загружать детальную информацию (дорого - 2 запроса на игру)")
-    details_limit: int = Field(default=0, ge=0, description="Максимум игр для загрузки деталей (0 = все на страницах)")
+    load_details: bool = Field(
+        default=False, description="Загружать детальную информацию (дорого - 2 запроса на игру)"
+    )
+    details_limit: int = Field(
+        default=0, ge=0, description="Максимум игр для загрузки деталей (0 = все на страницах)"
+    )
 
 
 class SyncBatchResponse(BaseModel):

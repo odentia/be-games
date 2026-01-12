@@ -27,6 +27,7 @@ class Screenshot:
 @dataclass
 class Game:
     """Доменная модель игры"""
+
     id: str
     rawg_id: int
     slug: str

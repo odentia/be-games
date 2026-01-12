@@ -19,10 +19,7 @@ class GameFactory:
             for entry in data.get("platforms", [])
             if entry.get("platform")
         ]
-        genres = [
-            Genre(id=genre["id"], name=genre["name"])
-            for genre in data.get("genres", [])
-        ]
+        genres = [Genre(id=genre["id"], name=genre["name"]) for genre in data.get("genres", [])]
         screenshots = [
             Screenshot(
                 id=shot.get("id", 0),
@@ -67,10 +64,7 @@ class GameFactory:
             for entry in data.get("platforms", [])
             if entry.get("platform")
         ]
-        genres = [
-            Genre(id=genre["id"], name=genre["name"])
-            for genre in data.get("genres", [])
-        ]
+        genres = [Genre(id=genre["id"], name=genre["name"]) for genre in data.get("genres", [])]
         screenshots = [
             Screenshot(
                 id=shot.get("id", 0),
@@ -96,8 +90,12 @@ class GameFactory:
             metacritic=data.get("metacritic"),
             rating=data.get("rating"),
             release_date=release_date,
-            developer=(data.get("developers") or [{}])[0].get("name") if data.get("developers") else None,
-            publisher=(data.get("publishers") or [{}])[0].get("name") if data.get("publishers") else None,
+            developer=(data.get("developers") or [{}])[0].get("name")
+            if data.get("developers")
+            else None,
+            publisher=(data.get("publishers") or [{}])[0].get("name")
+            if data.get("publishers")
+            else None,
             background_image=data.get("background_image"),
             website=data.get("website"),
             playtime=data.get("playtime"),

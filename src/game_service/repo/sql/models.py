@@ -32,12 +32,22 @@ class GameModel(Base):
     playtime: Mapped[int | None]
     age_rating: Mapped[str | None] = mapped_column(String(64))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
 
-    platforms: Mapped[list[PlatformModel]] = relationship("PlatformModel", cascade="all, delete-orphan", back_populates="game")
-    genres: Mapped[list[GenreModel]] = relationship("GenreModel", cascade="all, delete-orphan", back_populates="game")
-    tags: Mapped[list[TagModel]] = relationship("TagModel", cascade="all, delete-orphan", back_populates="game")
-    screenshots: Mapped[list[ScreenshotModel]] = relationship("ScreenshotModel", cascade="all, delete-orphan", back_populates="game")
+    platforms: Mapped[list[PlatformModel]] = relationship(
+        "PlatformModel", cascade="all, delete-orphan", back_populates="game"
+    )
+    genres: Mapped[list[GenreModel]] = relationship(
+        "GenreModel", cascade="all, delete-orphan", back_populates="game"
+    )
+    tags: Mapped[list[TagModel]] = relationship(
+        "TagModel", cascade="all, delete-orphan", back_populates="game"
+    )
+    screenshots: Mapped[list[ScreenshotModel]] = relationship(
+        "ScreenshotModel", cascade="all, delete-orphan", back_populates="game"
+    )
 
 
 class PlatformModel(Base):

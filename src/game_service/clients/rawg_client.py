@@ -19,7 +19,9 @@ class RAWGClient:
     async def close(self) -> None:
         await self._client.aclose()
 
-    async def fetch_game(self, *, slug: Optional[str] = None, rawg_id: Optional[int] = None) -> Dict[str, Any]:
+    async def fetch_game(
+        self, *, slug: Optional[str] = None, rawg_id: Optional[int] = None
+    ) -> Dict[str, Any]:
         if not slug and not rawg_id:
             raise ValueError("slug or rawg_id is required")
 
@@ -33,7 +35,9 @@ class RAWGClient:
         response.raise_for_status()
         return response.json()
 
-    async def search_games(self, *, search: str, page: int = 1, page_size: int = 20) -> Dict[str, Any]:
+    async def search_games(
+        self, *, search: str, page: int = 1, page_size: int = 20
+    ) -> Dict[str, Any]:
         params = {
             "key": self.api_key,
             "search": search,

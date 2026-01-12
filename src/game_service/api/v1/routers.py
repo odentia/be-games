@@ -7,6 +7,7 @@ api_v1 = APIRouter(prefix="/v1", tags=["games"])
 api_v1.include_router(games_router)
 api_v1.include_router(genres_router)
 
+
 @api_v1.get("/healthz")
 async def healthz():
     return {"status": "ok"}

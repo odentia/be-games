@@ -31,7 +31,7 @@ class SQLGameRepository(GameRepository):
         offset: int = 0,
     ) -> List[Game]:
         from datetime import date as date_type
-        
+
         query = select(m.GameModel).options(
             selectinload(m.GameModel.platforms),
             selectinload(m.GameModel.genres),
@@ -41,7 +41,9 @@ class SQLGameRepository(GameRepository):
         if search:
             query = query.where(m.GameModel.name.ilike(f"%{search}%"))
         if platform:
-            query = query.join(m.GameModel.platforms).where(m.PlatformModel.name.ilike(f"%{platform}%"))
+            query = query.join(m.GameModel.platforms).where(
+                m.PlatformModel.name.ilike(f"%{platform}%")
+            )
         if genre:
             query = query.join(m.GameModel.genres).where(m.GenreModel.name.ilike(f"%{genre}%"))
         if age_rating:
@@ -72,12 +74,14 @@ class SQLGameRepository(GameRepository):
         rating_to: Optional[float] = None,
     ) -> int:
         from datetime import date as date_type
-        
+
         query = select(func.count(m.GameModel.id))
         if search:
             query = query.where(m.GameModel.name.ilike(f"%{search}%"))
         if platform:
-            query = query.join(m.GameModel.platforms).where(m.PlatformModel.name.ilike(f"%{platform}%"))
+            query = query.join(m.GameModel.platforms).where(
+                m.PlatformModel.name.ilike(f"%{platform}%")
+            )
         if genre:
             query = query.join(m.GameModel.genres).where(m.GenreModel.name.ilike(f"%{genre}%"))
         if age_rating:
@@ -94,35 +98,47 @@ class SQLGameRepository(GameRepository):
         return result.scalar_one() or 0
 
     async def get_by_id(self, game_id: str) -> Optional[Game]:
-        query = select(m.GameModel).options(
-            selectinload(m.GameModel.platforms),
-            selectinload(m.GameModel.genres),
-            selectinload(m.GameModel.tags),
-            selectinload(m.GameModel.screenshots),
-        ).where(m.GameModel.id == game_id)
+        query = (
+            select(m.GameModel)
+            .options(
+                selectinload(m.GameModel.platforms),
+                selectinload(m.GameModel.genres),
+                selectinload(m.GameModel.tags),
+                selectinload(m.GameModel.screenshots),
+            )
+            .where(m.GameModel.id == game_id)
+        )
         result = await self.session.execute(query)
         if model := result.scalars().first():
             return mappers.game_to_domain(model)
         return None
 
     async def get_by_slug(self, slug: str) -> Optional[Game]:
-        query = select(m.GameModel).options(
-            selectinload(m.GameModel.platforms),
-            selectinload(m.GameModel.genres),
-            selectinload(m.GameModel.tags),
-            selectinload(m.GameModel.screenshots),
-        ).where(m.GameModel.slug == slug)
+        query = (
+            select(m.GameModel)
+            .options(
+                selectinload(m.GameModel.platforms),
+                selectinload(m.GameModel.genres),
+                selectinload(m.GameModel.tags),
+                selectinload(m.GameModel.screenshots),
+            )
+            .where(m.GameModel.slug == slug)
+        )
         result = await self.session.execute(query)
         model = result.scalars().first()
         return mappers.game_to_domain(model) if model else None
 
     async def upsert_game(self, game: Game) -> Game:
-        query = select(m.GameModel).options(
-            selectinload(m.GameModel.platforms),
-            selectinload(m.GameModel.genres),
-            selectinload(m.GameModel.tags),
-            selectinload(m.GameModel.screenshots),
-        ).where(m.GameModel.rawg_id == game.rawg_id)
+        query = (
+            select(m.GameModel)
+            .options(
+                selectinload(m.GameModel.platforms),
+                selectinload(m.GameModel.genres),
+                selectinload(m.GameModel.tags),
+                selectinload(m.GameModel.screenshots),
+            )
+            .where(m.GameModel.rawg_id == game.rawg_id)
+        )
         existing = await self.session.execute(query)
         model = existing.scalars().first()
         if model:
@@ -148,7 +164,6 @@ class SQLGameRepository(GameRepository):
         await self.session.commit()
         await self.session.refresh(model, ["platforms", "genres", "tags", "screenshots"])
         return mappers.game_to_domain(model)
-
 
     async def list_genres(self) -> List[str]:
         """Получить список всех уникальных жанров"""
