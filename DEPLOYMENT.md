@@ -96,6 +96,33 @@ LOG_LEVEL=INFO
 
 Вручную: Actions → Build and Push Docker images to GHCR → Run workflow
 
+## Устранение проблем с SSH
+
+Если получаете ошибку "unable to authenticate", проверьте на сервере:
+
+```bash
+# 1. Проверьте, что публичный ключ добавлен
+cat ~/.ssh/authorized_keys
+# Должна быть строка, начинающаяся с ssh-rsa AAAA...
+
+# 2. Проверьте права доступа
+ls -la ~/.ssh
+# Должно быть:
+# drwx------  (700) для .ssh
+# -rw-------  (600) для authorized_keys
+
+# 3. Если права неправильные, исправьте:
+chmod 700 ~/.ssh
+chmod 600 ~/.ssh/authorized_keys
+
+# 4. Проверьте логи SSH (если доступны)
+sudo tail -f /var/log/auth.log
+# или
+sudo journalctl -u ssh -f
+```
+
+**Убедитесь, что публичный ключ в authorized_keys соответствует приватному ключу в GitHub Secrets!**
+
 ## Проверка деплоя на сервере
 
 Подключитесь к серверу через VNC/SSH и выполните:
