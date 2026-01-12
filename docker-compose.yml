@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  game-service:
+    # На сервере замените YOUR_GITHUB_USERNAME на ваш GitHub username
+    # Например: ghcr.io/yourusername/game-service:latest
+    image: ghcr.io/YOUR_GITHUB_USERNAME/game-service:latest
+    container_name: game-service
+    restart: unless-stopped
+    ports:
+      - "8010:8010"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - ALEMBIC_DATABASE_URL=${ALEMBIC_DATABASE_URL}
+      - RAWG_API_KEY=${RAWG_API_KEY}
+      - RAWG_BASE_URL=${RAWG_BASE_URL:-https://api.rawg.io/api}
+      - ENV=prod
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - CORS_ALLOW_ORIGINS=${CORS_ALLOW_ORIGINS:-*}
+    networks:
+      - game-service-network
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8010/docs\")' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  game-service-network:
+    driver: bridge
+
