@@ -13,9 +13,33 @@ Settings → Secrets and variables → Actions → New repository secret:
 
 **1. Настройте SSH ключи:**
 
+На локальной машине:
 ```bash
 ssh-keygen -t rsa -b 4096 -C "github-actions"
+# Нажмите Enter для сохранения в ~/.ssh/id_rsa
+# Можно оставить passphrase пустым
+
 ssh-copy-id -i ~/.ssh/id_rsa.pub ваш-пользователь@ваш-сервер
+```
+
+Проверьте подключение:
+```bash
+ssh ваш-пользователь@ваш-сервер
+# Должно подключиться без пароля
+```
+
+Если `ssh-copy-id` не работает, добавьте ключ вручную:
+```bash
+# Скопируйте публичный ключ
+cat ~/.ssh/id_rsa.pub
+
+# На сервере:
+ssh ваш-пользователь@ваш-сервер
+mkdir -p ~/.ssh
+chmod 700 ~/.ssh
+nano ~/.ssh/authorized_keys
+# Вставьте публичный ключ (одна строка)
+chmod 600 ~/.ssh/authorized_keys
 ```
 
 Добавьте содержимое `~/.ssh/id_rsa` в GitHub Secrets как `DEPLOY_SSH_KEY`
