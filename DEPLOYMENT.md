@@ -11,6 +11,7 @@ Settings → Secrets and variables → Actions → New repository secret:
 - **DATABASE_URL** - строка подключения к базе данных (например: `postgresql+asyncpg://user:password@host:5432/games`)
 - **ALEMBIC_DATABASE_URL** - строка подключения для миграций (например: `postgresql://user:password@host:5432/games`)
 - **RAWG_API_KEY** - API ключ от RAWG API
+- **GHCR_TOKEN** (обязательно, если пакет приватный) - Personal Access Token для доступа к GHCR. Создайте на https://github.com/settings/tokens с правами `read:packages`
 
 ## Первоначальная настройка (один раз)
 
@@ -65,7 +66,21 @@ ssh -i ~/.ssh/id_rsa ваш-пользователь@ваш-сервер
 
 Вручную: Actions → Build and Push Docker images to GHCR → Run workflow
 
-**Примечание:** Если образ приватный, workflow автоматически авторизуется в GHCR. Если хотите сделать образ публичным (не требуется авторизация), в настройках пакета GitHub (Packages → ваш репозиторий) измените видимость на Public.
+**Примечание про видимость пакета:**
+
+**Если пакет приватный (по умолчанию):**
+- Обязательно добавьте `GHCR_TOKEN` в GitHub Secrets (см. раздел выше)
+- Workflow автоматически авторизуется в GHCR перед pull
+
+**Если хотите сделать пакет публичным (не требуется токен):**
+
+*В организации:*
+1. Страница организации → **Packages** (слева)
+2. Пакет `game-service` → **Package settings** → **Danger Zone** → **Change visibility** → **Public**
+
+*В личном аккаунте:*
+1. Профиль → **Packages** или репозиторий → **Packages**
+2. Пакет `game-service` → **Package settings** → **Danger Zone** → **Change visibility** → **Public**
 
 ## Устранение проблем с SSH
 
