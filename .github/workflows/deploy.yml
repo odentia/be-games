@@ -39,7 +39,7 @@ jobs:
                 networks:
                   - game-service-network
                 healthcheck:
-                  test: ["CMD-SHELL", "pg_isready -U \$POSTGRES_USER"]
+                  test: ["CMD-SHELL", "pg_isready -U ${{ secrets.POSTGRES_USER || 'games_user' }}"]
                   interval: 10s
                   timeout: 5s
                   retries: 5
@@ -67,6 +67,9 @@ jobs:
             EOF
             
             cat > .env << EOF
+            POSTGRES_DB=${{ secrets.POSTGRES_DB || 'games' }}
+            POSTGRES_USER=${{ secrets.POSTGRES_USER || 'games_user' }}
+            POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
             DATABASE_URL=${{ secrets.DATABASE_URL }}
             ALEMBIC_DATABASE_URL=${{ secrets.ALEMBIC_DATABASE_URL }}
             RAWG_API_KEY=${{ secrets.RAWG_API_KEY }}
