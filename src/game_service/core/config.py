@@ -32,7 +32,9 @@ class Settings(BaseSettings):
 
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
 
-    database_url: str = Field(default="postgresql+asyncpg://games_user:password@localhost:5432/games")
+    database_url: str = Field(
+        default="postgresql+asyncpg://games_user:password@localhost:5432/games"
+    )
     sql_echo: bool = Field(default=False)
 
     rawg_base_url: AnyHttpUrl = Field(default="https://api.rawg.io/api")
