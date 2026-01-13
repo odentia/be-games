@@ -52,6 +52,6 @@ jobs:
               echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             fi
             docker compose pull
-            docker compose run --rm game-service uv run alembic upgrade head || echo "Migration failed or not needed"
+            docker compose run --rm -e DATABASE_URL="${{ secrets.DATABASE_URL }}" -e ALEMBIC_DATABASE_URL="${{ secrets.ALEMBIC_DATABASE_URL }}" game-service uv run alembic upgrade head || echo "Migration failed or not needed"
             docker compose up -d
             docker image prune -f
