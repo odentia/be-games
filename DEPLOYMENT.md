@@ -63,7 +63,7 @@ ssh-keygen -t rsa -b 4096 -C "github-actions"
 cat ~/.ssh/id_rsa.pub
 ```
 
-На сервере через VNC/SSH:
+На сервере VNC/SSH:
 ```bash
 mkdir -p ~/.ssh
 chmod 700 ~/.ssh
