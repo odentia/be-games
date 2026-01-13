@@ -2,7 +2,7 @@
 
 ## GitHub Secrets
 
-Settings → Secrets and variables → Actions → New repository secret:
+**Repository secrets** (Settings → Secrets and variables → Actions → New repository secret):
 
 - **DEPLOY_HOST** - IP или домен сервера
 - **DEPLOY_USER** - пользователь SSH (например: `root`, `deploy`)
@@ -11,7 +11,11 @@ Settings → Secrets and variables → Actions → New repository secret:
 - **DATABASE_URL** - строка подключения к базе данных (например: `postgresql+asyncpg://user:password@host:5432/games`)
 - **ALEMBIC_DATABASE_URL** - строка подключения для миграций (например: `postgresql://user:password@host:5432/games`)
 - **RAWG_API_KEY** - API ключ от RAWG API
-- **GHCR_TOKEN** (обязательно, если пакет приватный) - Personal Access Token для доступа к GHCR. Создайте на https://github.com/settings/tokens с правами `read:packages`
+
+**GHCR_TOKEN** (обязательно, если пакет приватный):
+- **Repository secret** - если пакет используется только в этом репозитории
+- **Organization secret** - если пакет в организации и используется в нескольких репозиториях (Organization Settings → Secrets and variables → Actions → New organization secret)
+- Создайте PAT на https://github.com/settings/tokens с правами `read:packages`
 
 ## Первоначальная настройка (один раз)
 
