@@ -5,15 +5,10 @@
 uv sync
 ```
 
-## 2. Настройка базы данных
+## 2. Настройка базы данных PostgreSQL
 
-### Вариант A: SQLite (проще для разработки)
-```powershell
-$env:DATABASE_URL = "sqlite+aiosqlite:///./games.db"
-uv run alembic upgrade head
-```
+Установите PostgreSQL и создайте базу данных, затем настройте переменные окружения:
 
-### Вариант B: PostgreSQL
 ```powershell
 # Установите переменные окружения с вашими данными PostgreSQL
 $env:DATABASE_URL = "postgresql+asyncpg://user:pass@localhost:5432/games"
@@ -21,9 +16,17 @@ $env:ALEMBIC_DATABASE_URL = "postgresql://user:pass@localhost:5432/games"
 uv run alembic upgrade head
 ```
 
+**Создание базы данных:**
+```sql
+CREATE DATABASE games;
+CREATE USER games_user WITH PASSWORD 'your_password';
+GRANT ALL PRIVILEGES ON DATABASE games TO games_user;
+```
+
 ## 3. Запуск приложения
 ```powershell
-$env:DATABASE_URL = "sqlite+aiosqlite:///./games.db"
+$env:DATABASE_URL = "postgresql+asyncpg://user:pass@localhost:5432/games"
+$env:ALEMBIC_DATABASE_URL = "postgresql://user:pass@localhost:5432/games"
 $env:RAWG_API_KEY = "ваш_ключ_от_rawg_api"  # Получите на https://rawg.io/apidocs
 uv run python -m game_service.api
 ```
@@ -50,9 +53,9 @@ Invoke-RestMethod -Uri "http://localhost:8010/api/v1/games/sync" -Method POST -B
 
 ## Примечания
 
-- По умолчанию используется SQLite (`sqlite+aiosqlite:///./games.db`)
+- Микросервис использует PostgreSQL (требуется настройка DATABASE_URL)
 - Для синхронизации игр из RAWG нужен валидный API ключ
-- База данных создаётся автоматически при первом запуске миграций
+- База данных должна быть создана до запуска миграций
 
 ## Дополнительная документация
 

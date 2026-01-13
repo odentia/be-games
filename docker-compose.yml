@@ -1,12 +1,31 @@
-version: '3.8'
-
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: game-service-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-games}
+      POSTGRES_USER: ${POSTGRES_USER:-games_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - game-service-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-games_user}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   game-service:
     # На сервере замените YOUR_GITHUB_USERNAME на ваш GitHub username
     # Например: ghcr.io/yourusername/game-service:latest
     image: ghcr.io/YOUR_GITHUB_USERNAME/game-service:latest
     container_name: game-service
     restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
     ports:
       - "8010:8010"
     environment:
@@ -30,3 +49,5 @@ networks:
   game-service-network:
     driver: bridge
 
+volumes:
+  postgres_data:

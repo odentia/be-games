@@ -2,20 +2,49 @@
 
 ## GitHub Secrets
 
-**Repository secrets** (Settings → Secrets and variables → Actions → New repository secret):
+**Обязательные секреты** (Settings → Secrets and variables → Actions → New repository secret):
 
-- **DEPLOY_HOST** - IP или домен сервера
-- **DEPLOY_USER** - пользователь SSH (например: `root`, `deploy`)
-- **DEPLOY_SSH_KEY** - приватный SSH ключ (`~/.ssh/id_rsa`)
-- **DEPLOY_PORT** (опционально) - SSH порт, по умолчанию 22
-- **DATABASE_URL** - строка подключения к базе данных (например: `postgresql+asyncpg://user:password@host:5432/games`)
-- **ALEMBIC_DATABASE_URL** - строка подключения для миграций (например: `postgresql://user:password@host:5432/games`)
-- **RAWG_API_KEY** - API ключ от RAWG API
+1. **DEPLOY_HOST** - IP или домен вашего сервера
+   - Пример: `192.168.1.100` или `example.com`
 
-**GHCR_TOKEN** (обязательно, если пакет приватный):
-- **Repository secret** - если пакет используется только в этом репозитории
-- **Organization secret** - если пакет в организации и используется в нескольких репозиториях (Organization Settings → Secrets and variables → Actions → New organization secret)
-- Создайте PAT на https://github.com/settings/tokens с правами `read:packages`
+2. **DEPLOY_USER** - пользователь SSH для подключения к серверу
+   - Пример: `root` или `deploy`
+
+3. **DEPLOY_SSH_KEY** - приватный SSH ключ (см. инструкцию ниже)
+   - Файл: `~/.ssh/id_rsa` (без `.pub`)
+
+4. **POSTGRES_DB** - название базы данных (опционально, по умолчанию `games`)
+   - Пример: `games`
+
+5. **POSTGRES_USER** - пользователь PostgreSQL (опционально, по умолчанию `games_user`)
+   - Пример: `games_user`
+
+6. **POSTGRES_PASSWORD** - пароль для PostgreSQL (обязательно)
+   - Пример: `your_secure_password_123`
+
+7. **DATABASE_URL** - строка подключения к базе данных PostgreSQL (async)
+   - Формат: `postgresql+asyncpg://user:password@postgres:5432/database_name`
+   - Пример: `postgresql+asyncpg://games_user:your_secure_password_123@postgres:5432/games`
+   - **Важно:** используйте `postgres` как хост (имя сервиса в Docker)
+
+8. **ALEMBIC_DATABASE_URL** - строка подключения для миграций Alembic (sync)
+   - Формат: `postgresql://user:password@postgres:5432/database_name`
+   - Пример: `postgresql://games_user:your_secure_password_123@postgres:5432/games`
+   - **Важно:** без `+asyncpg`, используйте `postgres` как хост
+
+9. **RAWG_API_KEY** - API ключ от RAWG API
+   - Получить можно на: https://rawg.io/apidocs
+   - Пример: `abc123def456ghi789`
+
+**Опциональные секреты:**
+
+- **DEPLOY_PORT** - SSH порт (по умолчанию 22)
+  - Пример: `2222`
+
+- **GHCR_TOKEN** (обязательно, если пакет приватный):
+  - **Repository secret** - если пакет используется только в этом репозитории
+  - **Organization secret** - если пакет в организации (Organization Settings → Secrets and variables → Actions)
+  - Создайте PAT на https://github.com/settings/tokens с правами `read:packages`
 
 ## Первоначальная настройка (один раз)
 
@@ -60,7 +89,31 @@ ssh -i ~/.ssh/id_rsa ваш-пользователь@ваш-сервер
 - Убедитесь, что нет лишних пробелов в начале/конце
 - В GitHub Secrets вставьте ключ как есть, одной строкой или многострочным текстом (оба варианта работают)
 
-**2. Файлы создаются автоматически**
+**2. Настройка базы данных PostgreSQL**
+
+PostgreSQL автоматически разворачивается в Docker вместе с приложением. Ничего настраивать на сервере не нужно!
+
+**Примеры значений для GitHub Secrets:**
+
+Предположим, вы хотите:
+- База данных: `games`
+- Пользователь: `games_user`
+- Пароль: `my_secure_password_123`
+
+Тогда добавьте в GitHub Secrets:
+
+- **POSTGRES_DB**: `games` (опционально, можно не указывать)
+- **POSTGRES_USER**: `games_user` (опционально, можно не указывать)
+- **POSTGRES_PASSWORD**: `my_secure_password_123` (обязательно!)
+- **DATABASE_URL**: `postgresql+asyncpg://games_user:my_secure_password_123@postgres:5432/games`
+- **ALEMBIC_DATABASE_URL**: `postgresql://games_user:my_secure_password_123@postgres:5432/games`
+
+**Важно:** 
+- Используйте `postgres` как хост (это имя сервиса в Docker)
+- Значения `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` должны совпадать с теми, что используются в `DATABASE_URL`
+- Данные сохраняются в Docker volume `postgres_data`
+
+**3. Файлы создаются автоматически**
 
 На сервере ничего делать не нужно - workflow автоматически создаст все необходимые файлы (`docker-compose.yml` и `.env`) при первом деплое.
 

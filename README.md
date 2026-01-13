@@ -12,7 +12,7 @@
 ## Стек
 
 - FastAPI, Uvicorn
-- SQLAlchemy (async) + PostgreSQL/SQLite
+- SQLAlchemy (async) + PostgreSQL
 - Alembic для миграций
 - RAWG API через httpx
 

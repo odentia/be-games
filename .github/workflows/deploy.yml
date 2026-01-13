@@ -24,21 +24,46 @@ jobs:
             mkdir -p ~/game-service
             cd ~/game-service
             
-            cat > docker-compose.yml << 'EOF'
+            cat > docker-compose.yml << EOF
             services:
+              postgres:
+                image: postgres:16-alpine
+                container_name: game-service-postgres
+                restart: unless-stopped
+                environment:
+                  POSTGRES_DB: ${{ secrets.POSTGRES_DB || 'games' }}
+                  POSTGRES_USER: ${{ secrets.POSTGRES_USER || 'games_user' }}
+                  POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+                volumes:
+                  - postgres_data:/var/lib/postgresql/data
+                networks:
+                  - game-service-network
+                healthcheck:
+                  test: ["CMD-SHELL", "pg_isready -U \$POSTGRES_USER"]
+                  interval: 10s
+                  timeout: 5s
+                  retries: 5
               game-service:
                 image: ghcr.io/${{ github.repository_owner }}/game-service:latest
                 container_name: game-service
                 restart: unless-stopped
+                depends_on:
+                  postgres:
+                    condition: service_healthy
                 ports:
                   - "8010:8010"
-                env_file:
-                  - .env
+                environment:
+                  - DATABASE_URL=${{ secrets.DATABASE_URL }}
+                  - ALEMBIC_DATABASE_URL=${{ secrets.ALEMBIC_DATABASE_URL }}
+                  - RAWG_API_KEY=${{ secrets.RAWG_API_KEY }}
+                  - LOG_LEVEL=INFO
                 networks:
                   - game-service-network
             networks:
               game-service-network:
                 driver: bridge
+            volumes:
+              postgres_data:
             EOF
             
             cat > .env << EOF
@@ -52,8 +77,6 @@ jobs:
               echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             fi
             docker compose pull
-            export DATABASE_URL="${{ secrets.DATABASE_URL }}"
-            export ALEMBIC_DATABASE_URL="${{ secrets.ALEMBIC_DATABASE_URL }}"
-            docker compose run --rm -e DATABASE_URL -e ALEMBIC_DATABASE_URL game-service uv run alembic upgrade head || echo "Migration failed or not needed"
+            docker compose run --rm game-service uv run alembic upgrade head || echo "Migration failed or not needed"
             docker compose up -d
             docker image prune -f
