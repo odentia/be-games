@@ -38,7 +38,7 @@ async def init_engine(url: str, echo: bool = False) -> AsyncEngine:
     if _engine is None:
         _engine = create_async_engine(url, echo=echo, pool_pre_ping=True)
         sanitized_url = _sanitize_db_url(url)
-        
+
         # Извлекаем имя базы данных для логирования
         db_name = "unknown"
         try:
@@ -47,7 +47,7 @@ async def init_engine(url: str, echo: bool = False) -> AsyncEngine:
                 db_name = db_part.split("?")[0].split("#")[0]
         except Exception:
             pass
-        
+
         log.info(
             "database engine initialized",
             extra={
@@ -56,7 +56,7 @@ async def init_engine(url: str, echo: bool = False) -> AsyncEngine:
                 "pool_pre_ping": True,
             },
         )
-        
+
         # Проверяем подключение и получаем информацию о БД
         try:
             async with _engine.connect() as conn:
@@ -64,7 +64,7 @@ async def init_engine(url: str, echo: bool = False) -> AsyncEngine:
                 await conn.execute(text("SELECT 1"))
                 await conn.commit()
                 log.info("database connection test successful", extra={"database": db_name})
-                
+
                 # Получаем информацию о версии PostgreSQL
                 version_result = await conn.execute(text("SELECT version()"))
                 pg_version = version_result.scalar()
@@ -77,7 +77,7 @@ async def init_engine(url: str, echo: bool = False) -> AsyncEngine:
                             "postgres_version": version_short,
                         },
                     )
-                
+
                 # Получаем текущее имя базы данных
                 db_result = await conn.execute(text("SELECT current_database()"))
                 current_db = db_result.scalar()
@@ -115,7 +115,7 @@ async def close_engine(engine: AsyncEngine | None = None) -> None:
             )
         except Exception:
             pass
-        
+
         await target.dispose()
         _engine = None
         _session_factory = None
