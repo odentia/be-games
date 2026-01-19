@@ -10,7 +10,7 @@ try:
 except ModuleNotFoundError:
     import tomli as tomllib
 
-from pydantic import AnyHttpUrl, Field, field_validator
+from pydantic import AnyHttpUrl, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
