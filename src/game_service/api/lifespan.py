@@ -61,8 +61,10 @@ def build_lifespan(settings: Settings):
                     user_pass = parts[0].split("://")[1]
                     if ":" in user_pass:
                         user = user_pass.split(":")[0]
-                        sanitized_url = f"{parts[0].split('://')[0]}://{user}:***@{parts[1]}"
-            
+                        sanitized_url = (
+                            f"{parts[0].split('://')[0]}://{user}:***@{parts[1]}"
+                        )
+
             log.info(
                 "Initializing database connection...",
                 extra={
