@@ -45,21 +45,11 @@ class Settings(BaseSettings):
         """Build Alembic database URL from parameters"""
         if self.alembic_database_url:
             return self.alembic_database_url
-        from urllib.parse import quote_plus
+        from urllib.parse import quote_plus, urlunparse
 
         encoded_password = quote_plus(self.database_password)
-        return (
-            "postgresql://"
-            + self.database_user
-            + ":"
-            + encoded_password
-            + "@"
-            + self.database_host
-            + ":"
-            + str(self.database_port)
-            + "/"
-            + self.database_name
-        )
+        netloc = f"{self.database_user}:{encoded_password}@{self.database_host}:{self.database_port}"
+        return urlunparse(("postgresql", netloc, self.database_name, "", "", ""))
 
     def model_post_init(self, __context) -> None:
         """Build database_url from parameters if not provided"""
@@ -68,18 +58,10 @@ class Settings(BaseSettings):
             from urllib.parse import quote_plus
 
             encoded_password = quote_plus(self.database_password)
-            self.database_url = (
-                "postgresql+asyncpg://"
-                + self.database_user
-                + ":"
-                + encoded_password
-                + "@"
-                + self.database_host
-                + ":"
-                + str(self.database_port)
-                + "/"
-                + self.database_name
-            )
+            from urllib.parse import urlunparse
+
+            netloc = f"{self.database_user}:{encoded_password}@{self.database_host}:{self.database_port}"
+            self.database_url = urlunparse(("postgresql+asyncpg", netloc, self.database_name, "", "", ""))
             # Log for debugging (password hidden)
             import logging
 
