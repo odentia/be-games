@@ -23,18 +23,6 @@ class Settings(BaseSettings):
     env: EnvName = Field(default="dev")
     enable_docs: bool = True
     alembic_database_url: str | None = None
-    
-    def get_alembic_database_url(self) -> str:
-        """Build Alembic database URL from parameters"""
-        if self.alembic_database_url:
-            return self.alembic_database_url
-        # URL encode password to handle special characters
-        from urllib.parse import quote_plus
-        encoded_password = quote_plus(self.database_password)
-        return (
-            f"postgresql://{self.database_user}:{encoded_password}"
-            f"@{self.database_host}:{self.database_port}/{self.database_name}"
-        )
 
     http_host: str = Field(default="0.0.0.0")
     http_port: int = Field(default=8010)
@@ -48,16 +36,30 @@ class Settings(BaseSettings):
     database_user: str = Field(default="postgres")
     database_password: str = Field(default="password")
     database_name: str = Field(default="games")
-    
+
     # Full database URL (optional, will be built from parameters if not provided)
     database_url: str = Field(default="")
     sql_echo: bool = Field(default=False)
-    
+
+    def get_alembic_database_url(self) -> str:
+        """Build Alembic database URL from parameters"""
+        if self.alembic_database_url:
+            return self.alembic_database_url
+        # URL encode password to handle special characters
+        from urllib.parse import quote_plus
+
+        encoded_password = quote_plus(self.database_password)
+        return (
+            f"postgresql://{self.database_user}:{encoded_password}"
+            f"@{self.database_host}:{self.database_port}/{self.database_name}"
+        )
+
     def model_post_init(self, __context) -> None:
         """Build database_url from parameters if not provided"""
         if not self.database_url:
             # URL encode password to handle special characters
             from urllib.parse import quote_plus
+
             encoded_password = quote_plus(self.database_password)
             self.database_url = (
                 f"postgresql+asyncpg://{self.database_user}:{encoded_password}"
