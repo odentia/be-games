@@ -61,7 +61,6 @@ jobs:
                   - RABBITMQ_URL=${{ secrets.RABBITMQ_URL }}
                   - ENV=prod
                   - LOG_LEVEL=${{ secrets.LOG_LEVEL || 'INFO' }}
-                  - CORS_ALLOW_ORIGINS=${{ secrets.CORS_ALLOW_ORIGINS || '*' }}
                 networks:
                   - game-service-network
                 healthcheck:
@@ -89,7 +88,6 @@ jobs:
             RAWG_BASE_URL=${{ secrets.RAWG_BASE_URL || 'https://api.rawg.io/api' }}
             RABBITMQ_URL=${{ secrets.RABBITMQ_URL }}
             LOG_LEVEL=${{ secrets.LOG_LEVEL || 'INFO' }}
-            CORS_ALLOW_ORIGINS=${{ secrets.CORS_ALLOW_ORIGINS || '*' }}
             EOF
             
             if [ -n "${{ secrets.GHCR_TOKEN }}" ]; then
