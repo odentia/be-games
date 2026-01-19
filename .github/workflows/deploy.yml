@@ -104,16 +104,18 @@ jobs:
             docker compose pull
             
             # Проверяем переменные окружения перед запуском (для отладки)
-            echo "=== Checking DATABASE_URL ==="
-            echo "${{ secrets.DATABASE_URL }}" | sed 's/:[^:@]*@/:***@/g'
-            echo "=== Checking ALEMBIC_DATABASE_URL ==="
-            echo "${{ secrets.ALEMBIC_DATABASE_URL }}" | sed 's/:[^:@]*@/:***@/g'
+            echo "=== Checking DATABASE_URL (showing only database name) ==="
+            echo "${{ secrets.DATABASE_URL }}" | sed 's/.*\/\([^\/]*\)$/\1/' || echo "ERROR: Could not parse DATABASE_URL"
+            echo "=== Checking ALEMBIC_DATABASE_URL (showing only database name) ==="
+            echo "${{ secrets.ALEMBIC_DATABASE_URL }}" | sed 's/.*\/\([^\/]*\)$/\1/' || echo "ERROR: Could not parse ALEMBIC_DATABASE_URL"
             
             docker compose run --rm game-service uv run alembic upgrade head || echo "Migration failed or not needed"
             docker compose up -d
             
-            # Проверяем переменные внутри запущенного контейнера
-            echo "=== Checking environment variables in container ==="
-            docker compose exec -T game-service env | grep DATABASE_URL || echo "Container not running yet"
+            # Проверяем переменные внутри запущенного контейнера (показываем только имя базы)
+            echo "=== Checking DATABASE_URL in container (database name only) ==="
+            docker compose exec -T game-service sh -c 'echo $DATABASE_URL' | sed 's/.*\/\([^\/]*\)$/\1/' || echo "Container not running yet"
+            echo "=== Checking ALEMBIC_DATABASE_URL in container (database name only) ==="
+            docker compose exec -T game-service sh -c 'echo $ALEMBIC_DATABASE_URL' | sed 's/.*\/\([^\/]*\)$/\1/' || echo "Container not running yet"
             
             docker image prune -f
