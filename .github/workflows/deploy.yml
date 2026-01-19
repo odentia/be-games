@@ -58,7 +58,7 @@ jobs:
                   - ALEMBIC_DATABASE_URL=${{ secrets.ALEMBIC_DATABASE_URL }}
                   - RAWG_API_KEY=${{ secrets.RAWG_API_KEY }}
                   - RAWG_BASE_URL=${{ secrets.RAWG_BASE_URL || 'https://api.rawg.io/api' }}
-                  - RABBITMQ_URL=${{ secrets.RABBITMQ_URL }}
+                  - RABBITMQ_URL=amqp://${{ secrets.RABBITMQ_USER || 'guest' }}:${{ secrets.RABBITMQ_PASSWORD || 'guest' }}@host.docker.internal:5672/
                   - ENV=prod
                   - LOG_LEVEL=${{ secrets.LOG_LEVEL || 'INFO' }}
                 networks:
@@ -86,7 +86,8 @@ jobs:
             ALEMBIC_DATABASE_URL=${{ secrets.ALEMBIC_DATABASE_URL }}
             RAWG_API_KEY=${{ secrets.RAWG_API_KEY }}
             RAWG_BASE_URL=${{ secrets.RAWG_BASE_URL || 'https://api.rawg.io/api' }}
-            RABBITMQ_URL=${{ secrets.RABBITMQ_URL }}
+            RABBITMQ_USER=${{ secrets.RABBITMQ_USER || 'guest' }}
+            RABBITMQ_PASSWORD=${{ secrets.RABBITMQ_PASSWORD || 'guest' }}
             LOG_LEVEL=${{ secrets.LOG_LEVEL || 'INFO' }}
             EOF
             
