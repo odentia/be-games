@@ -49,10 +49,8 @@ class Settings(BaseSettings):
         from urllib.parse import quote_plus
 
         encoded_password = quote_plus(self.database_password)
-        return (
-            f"postgresql://{self.database_user}:{encoded_password}"
-            f"@{self.database_host}:{self.database_port}/{self.database_name}"
-        )
+        host_port = f"{self.database_host}:{self.database_port}"
+        return f"postgresql://{self.database_user}:{encoded_password}@{host_port}/{self.database_name}"
 
     def model_post_init(self, __context) -> None:
         """Build database_url from parameters if not provided"""
@@ -61,9 +59,10 @@ class Settings(BaseSettings):
             from urllib.parse import quote_plus
 
             encoded_password = quote_plus(self.database_password)
+            host_port = f"{self.database_host}:{self.database_port}"
             self.database_url = (
-                f"postgresql+asyncpg://{self.database_user}:{encoded_password}"
-                f"@{self.database_host}:{self.database_port}/{self.database_name}"
+                f"postgresql+asyncpg://{self.database_user}:{encoded_password}@"
+                f"{host_port}/{self.database_name}"
             )
             # Log for debugging (password hidden)
             import logging
