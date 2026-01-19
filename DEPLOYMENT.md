@@ -224,14 +224,35 @@ docker compose exec game-service env | grep DATABASE_URL
 
 4. Или исправьте локально на сервере (если используете `.env` файл):
 ```bash
-# Отредактируйте .env файл
+# Проверьте текущие значения переменных
+cd ~/game-service
+cat .env | grep DATABASE_URL
+
+# Если значения неправильные, отредактируйте .env файл
 nano .env
 
-# Убедитесь, что строки выглядят так:
+# Убедитесь, что строки выглядят так (ВАЖНО: в конце /games, а НЕ /games_user):
 DATABASE_URL=postgresql+asyncpg://games_user:your_password@postgres:5432/games
 ALEMBIC_DATABASE_URL=postgresql://games_user:your_password@postgres:5432/games
 
-# Перезапустите контейнеры
+# Полностью перезапустите контейнеры (удалите и создайте заново)
 docker compose down
 docker compose up -d
+
+# Проверьте переменные окружения внутри контейнера
+docker compose exec game-service env | grep DATABASE_URL
+```
+
+**Если проблема сохраняется:**
+
+1. Проверьте переменные в GitHub Secrets еще раз - убедитесь, что в конце `/games`, а не `/games_user`
+2. Удалите старый `.env` файл и перезапустите деплой:
+```bash
+cd ~/game-service
+rm .env
+# Затем запустите деплой через GitHub Actions - он создаст новый .env файл
+```
+3. Проверьте логи PostgreSQL для точной диагностики:
+```bash
+docker compose logs postgres | grep FATAL
 ```
