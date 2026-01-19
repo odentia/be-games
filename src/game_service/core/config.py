@@ -10,7 +10,7 @@ try:
 except ModuleNotFoundError:
     import tomli as tomllib
 
-from pydantic import AnyHttpUrl, Field
+from pydantic import AnyHttpUrl, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -28,7 +28,12 @@ class Settings(BaseSettings):
     http_port: int = Field(default=8010)
     reload: bool = Field(default=False)
 
-    cors_allow_origins: list[str] = Field(default_factory=lambda: ["*"])
+    _cors_allow_origins: str | None = Field(default=None, alias="CORS_ALLOW_ORIGINS", exclude=True)
+    
+    @property
+    def cors_allow_origins(self) -> list[str]:
+        """Парсит CORS origins из строки в список"""
+        return _parse_origins(self._cors_allow_origins)
 
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
 
@@ -49,7 +54,11 @@ class Settings(BaseSettings):
     public_base_url: Optional[AnyHttpUrl] = None
     hostname: str = Field(default_factory=socket.gethostname)
 
-    model_config = SettingsConfigDict(env_file=".env", env_nested_delimiter="__")
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_nested_delimiter="__",
+        populate_by_name=True,
+    )
 
     @classmethod
     def from_toml(cls, path: str) -> "Settings":
@@ -80,10 +89,6 @@ def load_settings() -> Settings:
     if config_file and os.path.exists(config_file):
         file_settings = Settings.from_toml(config_file)
         merged = file_settings.model_copy(update=defaults.model_dump(exclude_unset=True))
-        merged.cors_allow_origins = _parse_origins(
-            os.getenv("CORS_ALLOW_ORIGINS") or ",".join(file_settings.cors_allow_origins)
-        )
         return merged
 
-    defaults.cors_allow_origins = _parse_origins(os.getenv("CORS_ALLOW_ORIGINS"))
     return defaults
