@@ -108,8 +108,9 @@ jobs:
             # Останавливаем и удаляем контейнеры для полной перезагрузки переменных окружения
             docker compose down
             
-            # Если нужно пересоздать базу данных с новым паролем, раскомментируйте следующую строку:
-            # docker volume rm game-service_postgres_data 2>/dev/null || true
+            # Пересоздаем volume базы данных, чтобы использовать правильного пользователя и пароль
+            echo "Removing old database volume to recreate with correct user and password..."
+            docker volume rm game-service_postgres_data 2>/dev/null || true
             
             docker compose pull
             
