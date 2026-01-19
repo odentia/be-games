@@ -24,6 +24,13 @@ jobs:
             mkdir -p ~/game-service
             cd ~/game-service
             
+            # Формируем DATABASE_URL из тех же переменных, что используются для postgres
+            POSTGRES_DB="${{ secrets.POSTGRES_DB || 'games' }}"
+            POSTGRES_USER="${{ secrets.POSTGRES_USER || 'postgres' }}"
+            POSTGRES_PASSWORD="${{ secrets.POSTGRES_PASSWORD }}"
+            DATABASE_URL="postgresql+asyncpg://$POSTGRES_USER:$POSTGRES_PASSWORD@postgres:5432/$POSTGRES_DB"
+            ALEMBIC_DATABASE_URL="postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@postgres:5432/$POSTGRES_DB"
+            
             cat > docker-compose.yml << EOF
             services:
               postgres:
@@ -31,15 +38,15 @@ jobs:
                 container_name: game-service-postgres
                 restart: unless-stopped
                 environment:
-                  POSTGRES_DB: ${{ secrets.POSTGRES_DB || 'games' }}
-                  POSTGRES_USER: ${{ secrets.POSTGRES_USER || 'games_user' }}
-                  POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+                  POSTGRES_DB: ${POSTGRES_DB}
+                  POSTGRES_USER: ${POSTGRES_USER}
+                  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
                 volumes:
                   - postgres_data:/var/lib/postgresql/data
                 networks:
                   - game-service-network
                 healthcheck:
-                  test: ["CMD-SHELL", "pg_isready -U ${{ secrets.POSTGRES_USER || 'games_user' }}"]
+                  test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
                   interval: 10s
                   timeout: 5s
                   retries: 5
@@ -54,8 +61,8 @@ jobs:
                 ports:
                   - "8010:8010"
                 environment:
-                  - DATABASE_URL=${{ secrets.DATABASE_URL }}
-                  - ALEMBIC_DATABASE_URL=${{ secrets.ALEMBIC_DATABASE_URL }}
+                  - DATABASE_URL=${DATABASE_URL}
+                  - ALEMBIC_DATABASE_URL=${ALEMBIC_DATABASE_URL}
                   - RAWG_API_KEY=${{ secrets.RAWG_API_KEY }}
                   - RAWG_BASE_URL=${{ secrets.RAWG_BASE_URL || 'https://api.rawg.io/api' }}
                   - RABBITMQ_URL=amqp://${{ secrets.RABBITMQ_USER || 'guest' }}:${{ secrets.RABBITMQ_PASSWORD || 'guest' }}@rabbitmq:5672/
@@ -82,18 +89,11 @@ jobs:
             EOF
             
             cat > .env << EOF
-            POSTGRES_DB=${{ secrets.POSTGRES_DB || 'games' }}
-            POSTGRES_USER=${{ secrets.POSTGRES_USER || 'postgres' }}
-            POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
-            # Database connection parameters (will be used to build URL if DATABASE_URL is not set)
-            DATABASE_HOST=postgres
-            DATABASE_PORT=5432
-            DATABASE_USER=${{ secrets.POSTGRES_USER || 'postgres' }}
-            DATABASE_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
-            DATABASE_NAME=${{ secrets.POSTGRES_DB || 'games' }}
-            # Full URLs (optional, will be built from parameters above if not provided)
-            DATABASE_URL=${{ secrets.DATABASE_URL }}
-            ALEMBIC_DATABASE_URL=${{ secrets.ALEMBIC_DATABASE_URL }}
+            POSTGRES_DB=${POSTGRES_DB}
+            POSTGRES_USER=${POSTGRES_USER}
+            POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+            DATABASE_URL=${DATABASE_URL}
+            ALEMBIC_DATABASE_URL=${ALEMBIC_DATABASE_URL}
             RAWG_API_KEY=${{ secrets.RAWG_API_KEY }}
             RAWG_BASE_URL=${{ secrets.RAWG_BASE_URL || 'https://api.rawg.io/api' }}
             RABBITMQ_USER=${{ secrets.RABBITMQ_USER || 'guest' }}
@@ -115,15 +115,11 @@ jobs:
             
             # Проверяем переменные окружения перед запуском (для отладки)
             echo "=== Checking database parameters ==="
-            echo "POSTGRES_DB: ${{ secrets.POSTGRES_DB || 'games' }}"
-            echo "POSTGRES_USER: ${{ secrets.POSTGRES_USER || 'postgres' }}"
+            echo "POSTGRES_DB: ${POSTGRES_DB}"
+            echo "POSTGRES_USER: ${POSTGRES_USER}"
             echo "POSTGRES_PASSWORD: *** (hidden)"
-            echo "DATABASE_HOST: postgres"
-            echo "DATABASE_NAME: ${{ secrets.POSTGRES_DB || 'games' }}"
-            echo "DATABASE_USER: ${{ secrets.POSTGRES_USER || 'postgres' }}"
-            echo ""
-            echo "✅ Database connection will be built from separate parameters"
-            echo "   Format: postgresql+asyncpg://\${DATABASE_USER}:***@\${DATABASE_HOST}:5432/\${DATABASE_NAME}"
+            echo "DATABASE_URL will be set to: postgresql+asyncpg://${POSTGRES_USER}:***@postgres:5432/${POSTGRES_DB}"
+            echo "ALEMBIC_DATABASE_URL will be set to: postgresql://${POSTGRES_USER}:***@postgres:5432/${POSTGRES_DB}"
             
             docker compose run --rm game-service uv run alembic upgrade head || echo "Migration failed or not needed"
             docker compose up -d
