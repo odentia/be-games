@@ -22,15 +22,17 @@
 6. **POSTGRES_PASSWORD** - пароль для PostgreSQL (обязательно)
    - Пример: `your_secure_password_123`
 
-7. **DATABASE_URL** - строка подключения к базе данных PostgreSQL (async)
+7. **DATABASE_URL** - строка подключения к базе данных PostgreSQL (async, опционально)
    - Формат: `postgresql+asyncpg://user:password@postgres:5432/database_name`
    - Пример: `postgresql+asyncpg://postgres:your_secure_password_123@postgres:5432/games`
-   - **Важно:** используйте `postgres` как хост (имя сервиса в Docker)
+   - **Важно:** Если не указан, будет построен из отдельных параметров (`DATABASE_USER`, `DATABASE_PASSWORD`, `DATABASE_NAME`, `DATABASE_HOST`)
+   - Используйте `postgres` как хост (имя сервиса в Docker)
 
-8. **ALEMBIC_DATABASE_URL** - строка подключения для миграций Alembic (sync)
+8. **ALEMBIC_DATABASE_URL** - строка подключения для миграций Alembic (sync, опционально)
    - Формат: `postgresql://user:password@postgres:5432/database_name`
    - Пример: `postgresql://postgres:your_secure_password_123@postgres:5432/games`
-   - **Важно:** без `+asyncpg`, используйте `postgres` как хост
+   - **Важно:** Если не указан, будет построен из отдельных параметров (`DATABASE_USER`, `DATABASE_PASSWORD`, `DATABASE_NAME`, `DATABASE_HOST`)
+   - Без `+asyncpg`, используйте `postgres` как хост
 
 9. **RAWG_API_KEY** - API ключ от RAWG API
    - Получить можно на: https://rawg.io/apidocs
@@ -106,24 +108,22 @@ PostgreSQL автоматически разворачивается в Docker �
 
 Предположим, вы хотите:
 - База данных: `games`
-- Пользователь: `games_user`
+- Пользователь: `postgres`
 - Пароль: `my_secure_password_123`
 
 Тогда добавьте в GitHub Secrets:
 
-- **POSTGRES_DB**: `games` (опционально, можно не указывать)
-- **POSTGRES_USER**: `games_user` (опционально, можно не указывать)
+- **POSTGRES_DB**: `games` (опционально, по умолчанию `games`)
+- **POSTGRES_USER**: `postgres` (опционально, по умолчанию `postgres`)
 - **POSTGRES_PASSWORD**: `my_secure_password_123` (обязательно!)
-- **DATABASE_URL**: `postgresql+asyncpg://games_user:my_secure_password_123@postgres:5432/games`
-- **ALEMBIC_DATABASE_URL**: `postgresql://games_user:my_secure_password_123@postgres:5432/games`
+- **DATABASE_URL**: (опционально, будет построен автоматически из параметров выше)
+- **ALEMBIC_DATABASE_URL**: (опционально, будет построен автоматически из параметров выше)
 
 **Важно:** 
-- Используйте `postgres` как хост для базы данных (это имя сервиса в Docker)
-- **КРИТИЧЕСКИ ВАЖНО:** 
-  - В строке подключения должен быть пользователь **`postgres`** (по умолчанию)
-  - В конце строки подключения (`/database_name`) должно быть имя **БАЗЫ ДАННЫХ** (`games`), а НЕ имя пользователя!
-  - ✅ Правильно: `postgresql://postgres:password@postgres:5432/games`
-  - ❌ Неправильно (неправильная база): `postgresql://postgres:password@postgres:5432/postgres`
+- Теперь `DATABASE_URL` и `ALEMBIC_DATABASE_URL` строятся автоматически из `POSTGRES_USER`, `POSTGRES_PASSWORD` и `POSTGRES_DB`
+- Используется хост `postgres` (имя сервиса в Docker)
+- Вы можете указать `DATABASE_URL` и `ALEMBIC_DATABASE_URL` вручную, если нужна другая конфигурация
+- **КРИТИЧЕСКИ ВАЖНО:** Убедитесь, что `POSTGRES_PASSWORD` указан правильно и совпадает во всех местах
 - Для RabbitMQ используйте `host.docker.internal` если RabbitMQ на том же хосте, или IP/домен если на другом сервере
 - Данные сохраняются в Docker volume: `postgres_data`
 
@@ -203,12 +203,45 @@ curl http://localhost:8010/docs
 
 ## Устранение проблем
 
-### Ошибка: "database 'games_user' does not exist" или "password authentication failed for user 'postgres'"
+### Ошибка: "password authentication failed for user 'postgres'"
 
-Эти ошибки возникают, если в строке подключения указаны неправильные параметры.
+Эта ошибка возникает, если пароль в `DATABASE_URL` не совпадает с паролем в `POSTGRES_PASSWORD`.
 
-**Проблема 1:** В `DATABASE_URL` или `ALEMBIC_DATABASE_URL` указано имя пользователя вместо имени базы данных.
-**Проблема 2:** В `DATABASE_URL` или `ALEMBIC_DATABASE_URL` указан пользователь `postgres` вместо `games_user`.
+**Проблема:** В `DATABASE_URL` или `ALEMBIC_DATABASE_URL` указан неправильный пароль, или база данных была создана с другим паролем.
+
+**Решение:**
+
+1. **Убедитесь, что пароль в `DATABASE_URL` совпадает с `POSTGRES_PASSWORD`:**
+   - Если `POSTGRES_PASSWORD` = `my_password_123`
+   - То `DATABASE_URL` должен быть: `postgresql+asyncpg://postgres:my_password_123@postgres:5432/games`
+   - И `ALEMBIC_DATABASE_URL` должен быть: `postgresql://postgres:my_password_123@postgres:5432/games`
+
+2. **Если база данных уже была создана с другим паролем, нужно пересоздать volume:**
+   ```bash
+   cd ~/game-service
+   docker compose down -v  # -v удаляет volumes (база данных будет пересоздана)
+   # Затем перезапустите деплой через GitHub Actions
+   ```
+   
+   **Или удалите только volume базы данных:**
+   ```bash
+   cd ~/game-service
+   docker compose down
+   docker volume rm game-service_postgres_data  # или другое имя volume
+   # Затем перезапустите деплой через GitHub Actions
+   ```
+
+3. **Или измените пароль вручную в PostgreSQL:**
+   ```bash
+   docker compose exec postgres psql -U postgres -c "ALTER USER postgres WITH PASSWORD 'новый_пароль';"
+   ```
+   Затем обновите `POSTGRES_PASSWORD` и `DATABASE_URL` в GitHub Secrets.
+
+### Ошибка: "database 'games_user' does not exist"
+
+Эта ошибка возникает, если в строке подключения указано неправильное имя базы данных.
+
+**Проблема:** В `DATABASE_URL` или `ALEMBIC_DATABASE_URL` указано имя пользователя вместо имени базы данных.
 
 **Решение:**
 
@@ -236,9 +269,10 @@ cat .env | grep DATABASE_URL
 # Если значения неправильные, отредактируйте .env файл
 nano .env
 
-# Убедитесь, что строки выглядят так (ВАЖНО: в конце /games, а НЕ /games_user):
-DATABASE_URL=postgresql+asyncpg://games_user:your_password@postgres:5432/games
-ALEMBIC_DATABASE_URL=postgresql://games_user:your_password@postgres:5432/games
+# Убедитесь, что строки выглядят так (ВАЖНО: пользователь postgres, база games):
+DATABASE_URL=postgresql+asyncpg://postgres:your_password@postgres:5432/games
+ALEMBIC_DATABASE_URL=postgresql://postgres:your_password@postgres:5432/games
+# ВАЖНО: пароль должен совпадать с POSTGRES_PASSWORD!
 
 # Полностью перезапустите контейнеры (удалите и создайте заново)
 docker compose down

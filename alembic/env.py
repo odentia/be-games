@@ -22,6 +22,28 @@ if config.config_file_name is not None:
 ALEMBIC_DATABASE_URL = os.getenv("ALEMBIC_DATABASE_URL")
 ASYNC_URL = os.getenv("DATABASE_URL")
 
+# Build URL from separate parameters if DATABASE_URL is not set
+if not ASYNC_URL:
+    DB_HOST = os.getenv("DATABASE_HOST", "localhost")
+    DB_PORT = os.getenv("DATABASE_PORT", "5432")
+    DB_USER = os.getenv("DATABASE_USER", os.getenv("POSTGRES_USER", "postgres"))
+    DB_PASSWORD = os.getenv("DATABASE_PASSWORD", os.getenv("POSTGRES_PASSWORD", "password"))
+    DB_NAME = os.getenv("DATABASE_NAME", os.getenv("POSTGRES_DB", "games"))
+    from urllib.parse import quote_plus
+    encoded_password = quote_plus(DB_PASSWORD)
+    ASYNC_URL = f"postgresql+asyncpg://{DB_USER}:{encoded_password}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+
+# Build Alembic URL from separate parameters if ALEMBIC_DATABASE_URL is not set
+if not ALEMBIC_DATABASE_URL:
+    DB_HOST = os.getenv("DATABASE_HOST", "localhost")
+    DB_PORT = os.getenv("DATABASE_PORT", "5432")
+    DB_USER = os.getenv("DATABASE_USER", os.getenv("POSTGRES_USER", "postgres"))
+    DB_PASSWORD = os.getenv("DATABASE_PASSWORD", os.getenv("POSTGRES_PASSWORD", "password"))
+    DB_NAME = os.getenv("DATABASE_NAME", os.getenv("POSTGRES_DB", "games"))
+    from urllib.parse import quote_plus
+    encoded_password = quote_plus(DB_PASSWORD)
+    ALEMBIC_DATABASE_URL = f"postgresql://{DB_USER}:{encoded_password}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+
 
 def run_migrations_offline() -> None:
     url = ALEMBIC_DATABASE_URL or (ASYNC_URL and ASYNC_URL.replace("+asyncpg", ""))

@@ -29,6 +29,13 @@ services:
     ports:
       - "8010:8010"
     environment:
+      # Database connection - use separate parameters or full URL
+      - DATABASE_HOST=${DATABASE_HOST:-postgres}
+      - DATABASE_PORT=${DATABASE_PORT:-5432}
+      - DATABASE_USER=${DATABASE_USER:-${POSTGRES_USER:-postgres}}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD:-${POSTGRES_PASSWORD}}
+      - DATABASE_NAME=${DATABASE_NAME:-${POSTGRES_DB:-games}}
+      # Full URLs (optional, will be built from parameters if not provided)
       - DATABASE_URL=${DATABASE_URL}
       - ALEMBIC_DATABASE_URL=${ALEMBIC_DATABASE_URL}
       - RAWG_API_KEY=${RAWG_API_KEY}

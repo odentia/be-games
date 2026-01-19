@@ -85,6 +85,13 @@ jobs:
             POSTGRES_DB=${{ secrets.POSTGRES_DB || 'games' }}
             POSTGRES_USER=${{ secrets.POSTGRES_USER || 'postgres' }}
             POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+            # Database connection parameters (will be used to build URL if DATABASE_URL is not set)
+            DATABASE_HOST=postgres
+            DATABASE_PORT=5432
+            DATABASE_USER=${{ secrets.POSTGRES_USER || 'postgres' }}
+            DATABASE_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+            DATABASE_NAME=${{ secrets.POSTGRES_DB || 'games' }}
+            # Full URLs (optional, will be built from parameters above if not provided)
             DATABASE_URL=${{ secrets.DATABASE_URL }}
             ALEMBIC_DATABASE_URL=${{ secrets.ALEMBIC_DATABASE_URL }}
             RAWG_API_KEY=${{ secrets.RAWG_API_KEY }}
@@ -101,48 +108,22 @@ jobs:
             # Останавливаем и удаляем контейнеры для полной перезагрузки переменных окружения
             docker compose down
             
+            # Если нужно пересоздать базу данных с новым паролем, раскомментируйте следующую строку:
+            # docker volume rm game-service_postgres_data 2>/dev/null || true
+            
             docker compose pull
             
             # Проверяем переменные окружения перед запуском (для отладки)
-            echo "=== Checking DATABASE_URL ==="
-            DB_NAME=$(echo "${{ secrets.DATABASE_URL }}" | grep -oE '/[^/?#]+$' | sed 's|^/||' | sed 's|/.*$||')
-            DB_USER=$(echo "${{ secrets.DATABASE_URL }}" | grep -oE '://([^:]+):' | sed 's|://||' | sed 's|:||')
-            echo "Database name: $DB_NAME"
-            echo "Database user: $DB_USER"
-            if [ "$DB_NAME" = "games_user" ]; then
-              echo "❌ ERROR: Database name is 'games_user' (wrong - should be 'games')"
-            elif [ "$DB_NAME" = "games" ]; then
-              echo "✅ Database name is correct: 'games'"
-            else
-              echo "⚠️  Database name: '$DB_NAME'"
-            fi
-            if [ "$DB_USER" = "postgres" ]; then
-              echo "✅ Database user is correct: 'postgres'"
-            elif [ "$DB_USER" = "games_user" ]; then
-              echo "⚠️  Database user is 'games_user' (expected 'postgres')"
-            else
-              echo "⚠️  Database user: '$DB_USER'"
-            fi
-            
-            echo "=== Checking ALEMBIC_DATABASE_URL ==="
-            ALEMBIC_DB_NAME=$(echo "${{ secrets.ALEMBIC_DATABASE_URL }}" | grep -oE '/[^/?#]+$' | sed 's|^/||' | sed 's|/.*$||')
-            ALEMBIC_DB_USER=$(echo "${{ secrets.ALEMBIC_DATABASE_URL }}" | grep -oE '://([^:]+):' | sed 's|://||' | sed 's|:||')
-            echo "Database name: $ALEMBIC_DB_NAME"
-            echo "Database user: $ALEMBIC_DB_USER"
-            if [ "$ALEMBIC_DB_NAME" = "games_user" ]; then
-              echo "❌ ERROR: Database name is 'games_user' (wrong - should be 'games')"
-            elif [ "$ALEMBIC_DB_NAME" = "games" ]; then
-              echo "✅ Database name is correct: 'games'"
-            else
-              echo "⚠️  Database name: '$ALEMBIC_DB_NAME'"
-            fi
-            if [ "$ALEMBIC_DB_USER" = "postgres" ]; then
-              echo "✅ Database user is correct: 'postgres'"
-            elif [ "$ALEMBIC_DB_USER" = "games_user" ]; then
-              echo "⚠️  Database user is 'games_user' (expected 'postgres')"
-            else
-              echo "⚠️  Database user: '$ALEMBIC_DB_USER'"
-            fi
+            echo "=== Checking database parameters ==="
+            echo "POSTGRES_DB: ${{ secrets.POSTGRES_DB || 'games' }}"
+            echo "POSTGRES_USER: ${{ secrets.POSTGRES_USER || 'postgres' }}"
+            echo "POSTGRES_PASSWORD: *** (hidden)"
+            echo "DATABASE_HOST: postgres"
+            echo "DATABASE_NAME: ${{ secrets.POSTGRES_DB || 'games' }}"
+            echo "DATABASE_USER: ${{ secrets.POSTGRES_USER || 'postgres' }}"
+            echo ""
+            echo "✅ Database connection will be built from separate parameters"
+            echo "   Format: postgresql+asyncpg://\${DATABASE_USER}:***@\${DATABASE_HOST}:5432/\${DATABASE_NAME}"
             
             docker compose run --rm game-service uv run alembic upgrade head || echo "Migration failed or not needed"
             docker compose up -d
