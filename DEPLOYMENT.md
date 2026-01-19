@@ -36,12 +36,13 @@
    - Получить можно на: https://rawg.io/apidocs
    - Пример: `abc123def456ghi789`
 
-10. **RABBITMQ_USER** - пользователь для RabbitMQ (опционально, по умолчанию `guest`)
-    - Пример: `rabbitmq_user`
-
-11. **RABBITMQ_PASSWORD** - пароль для RabbitMQ (опционально, по умолчанию `guest`)
-    - Пример: `your_secure_rabbitmq_password_123`
-    - **Важно:** Используйте надежный пароль в продакшене!
+10. **RABBITMQ_URL** - строка подключения к существующему RabbitMQ (обязательно)
+    - Формат: `amqp://user:password@host:5672/`
+    - Если RabbitMQ на том же хосте: `amqp://user:password@host.docker.internal:5672/`
+    - Если RabbitMQ в другой Docker сети: `amqp://user:password@имя_контейнера:5672/`
+    - Если RabbitMQ на другом сервере: `amqp://user:password@ip_или_домен:5672/`
+    - Пример: `amqp://rabbitmq_user:your_password@host.docker.internal:5672/`
+    - **Важно:** RabbitMQ должен быть уже запущен на сервере!
 
 **Опциональные секреты:**
 
@@ -97,7 +98,9 @@ ssh -i ~/.ssh/id_rsa ваш-пользователь@ваш-сервер
 
 **2. Настройка базы данных PostgreSQL и RabbitMQ**
 
-PostgreSQL и RabbitMQ автоматически разворачиваются в Docker вместе с приложением. Ничего настраивать на сервере не нужно!
+PostgreSQL автоматически разворачивается в Docker вместе с приложением. 
+
+**RabbitMQ:** Должен быть уже запущен на сервере. Укажите `RABBITMQ_URL` в GitHub Secrets для подключения к существующему RabbitMQ.
 
 **Примеры значений для GitHub Secrets:**
 
@@ -116,13 +119,11 @@ PostgreSQL и RabbitMQ автоматически разворачиваются
 
 **Важно:** 
 - Используйте `postgres` как хост для базы данных (это имя сервиса в Docker)
-- Используйте `rabbitmq` как хост для RabbitMQ (это имя сервиса в Docker)
-- Значения `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` должны совпадать с теми, что используются в `DATABASE_URL`
 - **КРИТИЧЕСКИ ВАЖНО:** В конце строки подключения (`/database_name`) должно быть имя **БАЗЫ ДАННЫХ** (`games`), а НЕ имя пользователя (`games_user`)!
   - ✅ Правильно: `postgresql://games_user:password@postgres:5432/games`
   - ❌ Неправильно: `postgresql://games_user:password@postgres:5432/games_user`
-- Данные сохраняются в Docker volumes: `postgres_data` и `rabbitmq_data`
-- RabbitMQ Management UI доступен на порту `15672` (если открыт в firewall)
+- Для RabbitMQ используйте `host.docker.internal` если RabbitMQ на том же хосте, или IP/домен если на другом сервере
+- Данные сохраняются в Docker volume: `postgres_data`
 
 **3. Файлы создаются автоматически**
 

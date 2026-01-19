@@ -44,35 +44,12 @@ jobs:
                   timeout: 5s
                   retries: 5
 
-              rabbitmq:
-                image: rabbitmq:3-management-alpine
-                container_name: game-service-rabbitmq
-                restart: unless-stopped
-                environment:
-                  RABBITMQ_DEFAULT_USER: ${{ secrets.RABBITMQ_USER || 'guest' }}
-                  RABBITMQ_DEFAULT_PASS: ${{ secrets.RABBITMQ_PASSWORD || 'guest' }}
-                volumes:
-                  - rabbitmq_data:/var/lib/rabbitmq
-                networks:
-                  - game-service-network
-                ports:
-                  - "15672:15672"
-                  - "5672:5672"
-                healthcheck:
-                  test: ["CMD-SHELL", "rabbitmq-diagnostics -q ping || exit 1"]
-                  interval: 30s
-                  timeout: 10s
-                  retries: 5
-                  start_period: 40s
-
               game-service:
                 image: ghcr.io/${{ github.repository_owner }}/game-service:latest
                 container_name: game-service
                 restart: unless-stopped
                 depends_on:
                   postgres:
-                    condition: service_healthy
-                  rabbitmq:
                     condition: service_healthy
                 ports:
                   - "8010:8010"
@@ -81,7 +58,7 @@ jobs:
                   - ALEMBIC_DATABASE_URL=${{ secrets.ALEMBIC_DATABASE_URL }}
                   - RAWG_API_KEY=${{ secrets.RAWG_API_KEY }}
                   - RAWG_BASE_URL=${{ secrets.RAWG_BASE_URL || 'https://api.rawg.io/api' }}
-                  - RABBITMQ_URL=amqp://${{ secrets.RABBITMQ_USER || 'guest' }}:${{ secrets.RABBITMQ_PASSWORD || 'guest' }}@rabbitmq:5672/
+                  - RABBITMQ_URL=${{ secrets.RABBITMQ_URL }}
                   - ENV=prod
                   - LOG_LEVEL=${{ secrets.LOG_LEVEL || 'INFO' }}
                   - CORS_ALLOW_ORIGINS=${{ secrets.CORS_ALLOW_ORIGINS || '*' }}
@@ -100,7 +77,6 @@ jobs:
 
             volumes:
               postgres_data:
-              rabbitmq_data:
             EOF
             
             cat > .env << EOF
@@ -111,8 +87,7 @@ jobs:
             ALEMBIC_DATABASE_URL=${{ secrets.ALEMBIC_DATABASE_URL }}
             RAWG_API_KEY=${{ secrets.RAWG_API_KEY }}
             RAWG_BASE_URL=${{ secrets.RAWG_BASE_URL || 'https://api.rawg.io/api' }}
-            RABBITMQ_USER=${{ secrets.RABBITMQ_USER || 'guest' }}
-            RABBITMQ_PASSWORD=${{ secrets.RABBITMQ_PASSWORD || 'guest' }}
+            RABBITMQ_URL=${{ secrets.RABBITMQ_URL }}
             LOG_LEVEL=${{ secrets.LOG_LEVEL || 'INFO' }}
             CORS_ALLOW_ORIGINS=${{ secrets.CORS_ALLOW_ORIGINS || '*' }}
             EOF

@@ -17,27 +17,6 @@ services:
       timeout: 5s
       retries: 5
 
-  rabbitmq:
-    image: rabbitmq:3-management-alpine
-    container_name: game-service-rabbitmq
-    restart: unless-stopped
-    environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
-    networks:
-      - game-service-network
-    ports:
-      - "15672:15672"  # Management UI
-      - "5672:5672"    # AMQP port
-    healthcheck:
-      test: ["CMD-SHELL", "rabbitmq-diagnostics -q ping || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 40s
-
   game-service:
     # На сервере замените YOUR_GITHUB_USERNAME на ваш GitHub username
     # Например: ghcr.io/yourusername/game-service:latest
@@ -47,8 +26,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
     ports:
       - "8010:8010"
     environment:
@@ -56,7 +33,7 @@ services:
       - ALEMBIC_DATABASE_URL=${ALEMBIC_DATABASE_URL}
       - RAWG_API_KEY=${RAWG_API_KEY}
       - RAWG_BASE_URL=${RAWG_BASE_URL:-https://api.rawg.io/api}
-      - RABBITMQ_URL=amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD:-guest}@rabbitmq:5672/
+      - RABBITMQ_URL=${RABBITMQ_URL:-amqp://guest:guest@host.docker.internal:5672/}
       - ENV=prod
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - CORS_ALLOW_ORIGINS=${CORS_ALLOW_ORIGINS:-*}
@@ -75,4 +52,3 @@ networks:
 
 volumes:
   postgres_data:
-  rabbitmq_data:
