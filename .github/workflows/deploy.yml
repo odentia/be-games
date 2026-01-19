@@ -58,11 +58,12 @@ jobs:
                   - ALEMBIC_DATABASE_URL=${{ secrets.ALEMBIC_DATABASE_URL }}
                   - RAWG_API_KEY=${{ secrets.RAWG_API_KEY }}
                   - RAWG_BASE_URL=${{ secrets.RAWG_BASE_URL || 'https://api.rawg.io/api' }}
-                  - RABBITMQ_URL=amqp://${{ secrets.RABBITMQ_USER || 'guest' }}:${{ secrets.RABBITMQ_PASSWORD || 'guest' }}@host.docker.internal:5672/
+                  - RABBITMQ_URL=amqp://${{ secrets.RABBITMQ_USER || 'guest' }}:${{ secrets.RABBITMQ_PASSWORD || 'guest' }}@rabbitmq:5672/
                   - ENV=prod
                   - LOG_LEVEL=${{ secrets.LOG_LEVEL || 'INFO' }}
                 networks:
                   - game-service-network
+                  - infra_rabbitmq_network
                 healthcheck:
                   test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8010/docs\")' || exit 1"]
                   interval: 30s
@@ -73,6 +74,8 @@ jobs:
             networks:
               game-service-network:
                 driver: bridge
+              infra_rabbitmq_network:
+                external: true
 
             volumes:
               postgres_data:
