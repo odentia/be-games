@@ -10,7 +10,6 @@ from game_service.domain.events import GameSyncedEvent
 from game_service.dtos.http import GameDetailResponse, GameListItem, GameListResponse, GameQuery
 from game_service.core.config import Settings
 from game_service.mq.publisher import EventPublisher
-from typing import Optional
 
 
 class GameAppService:
@@ -80,10 +79,6 @@ class GameAppService:
         data["short_screenshots"] = screenshots_data.get("results", [])
         domain_game = GameFactory.from_rawg(data)
         domain_game.id = slug or str(domain_game.rawg_id) or domain_game.id
-        
-        # Проверяем, существовала ли игра до синхронизации
-        existing = await self.game_repo.get_by_id(domain_game.id)
-        is_new = existing is None
         
         saved = await self.game_repo.upsert_game(domain_game)
         

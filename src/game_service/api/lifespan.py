@@ -5,11 +5,10 @@ from typing import AsyncIterator
 from fastapi import FastAPI
 
 from game_service.core.config import Settings
-from game_service.core.db import init_engine, init_session_factory, close_engine, get_session_factory
+from game_service.core.db import init_engine, init_session_factory, close_engine
 from game_service.core.logging import get_logger
 from game_service.mq.consumer import EventConsumer
 from game_service.mq.publisher import EventPublisher
-from game_service.repo.sql.repositories import SQLGameRepository
 
 log = get_logger(__name__)
 
