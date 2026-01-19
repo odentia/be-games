@@ -53,10 +53,12 @@ def build_lifespan(settings: Settings):
 
         try:
             # DB engine & session factory
+            log.info("Initializing database connection...")
             engine = await init_engine(settings.database_url, echo=settings.sql_echo)
             sf = init_session_factory(engine)
             app.state.engine = engine
             app.state.session_factory = sf
+            log.info("Database connection initialized successfully")
 
             # Initialize event publisher
             publisher = EventPublisher(settings)
