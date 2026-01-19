@@ -93,7 +93,10 @@ class Settings(BaseSettings):
             )
 
     rawg_base_url: AnyHttpUrl = Field(default="https://api.rawg.io/api")
-    rawg_api_key: str = Field(default="CHANGE_ME")
+    rawg_api_key: str = Field(
+        default="CHANGE_ME",
+        description="RAWG API key for accessing game data. Get it from https://rawg.io/apidocs",
+    )
 
     # --- RabbitMQ ---
     rabbitmq_url: str = Field(
