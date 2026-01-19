@@ -53,7 +53,26 @@ def build_lifespan(settings: Settings):
 
         try:
             # DB engine & session factory
-            log.info("Initializing database connection...")
+            # Log database connection info (password hidden)
+            sanitized_url = settings.database_url
+            if "@" in sanitized_url:
+                parts = sanitized_url.split("@")
+                if "://" in parts[0] and ":" in parts[0]:
+                    user_pass = parts[0].split("://")[1]
+                    if ":" in user_pass:
+                        user = user_pass.split(":")[0]
+                        sanitized_url = f"{parts[0].split('://')[0]}://{user}:***@{parts[1]}"
+            
+            log.info(
+                "Initializing database connection...",
+                extra={
+                    "database_url": sanitized_url,
+                    "database_user": settings.database_user,
+                    "database_host": settings.database_host,
+                    "database_name": settings.database_name,
+                    "database_password_set": bool(settings.database_password),
+                },
+            )
             engine = await init_engine(settings.database_url, echo=settings.sql_echo)
             sf = init_session_factory(engine)
             app.state.engine = engine

@@ -65,6 +65,21 @@ class Settings(BaseSettings):
                 f"postgresql+asyncpg://{self.database_user}:{encoded_password}"
                 f"@{self.database_host}:{self.database_port}/{self.database_name}"
             )
+            # Log for debugging (password is already encoded, so safe to log)
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.info(
+                "Built DATABASE_URL from parameters",
+                extra={
+                    "database_host": self.database_host,
+                    "database_port": self.database_port,
+                    "database_user": self.database_user,
+                    "database_name": self.database_name,
+                    "database_url": self.database_url.replace(
+                        f":{encoded_password}@", ":***@"
+                    ),
+                },
+            )
 
     rawg_base_url: AnyHttpUrl = Field(default="https://api.rawg.io/api")
     rawg_api_key: str = Field(default="CHANGE_ME")
