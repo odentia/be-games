@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     reload: bool = Field(default=False)
 
     _cors_allow_origins: str | None = Field(default=None, alias="CORS_ALLOW_ORIGINS", exclude=True)
-    
+
     @property
     def cors_allow_origins(self) -> list[str]:
         """Парсит CORS origins из строки в список"""
