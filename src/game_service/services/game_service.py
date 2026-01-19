@@ -6,15 +6,24 @@ from game_service.clients.rawg_client import RAWGClient
 from game_service.domain.models import Game
 from game_service.domain.repositories import GameRepository
 from game_service.domain.services import GameFactory
+from game_service.domain.events import GameSyncedEvent
 from game_service.dtos.http import GameDetailResponse, GameListItem, GameListResponse, GameQuery
 from game_service.core.config import Settings
+from game_service.mq.publisher import EventPublisher
 
 
 class GameAppService:
-    def __init__(self, game_repo: GameRepository, rawg_client: RAWGClient, settings: Settings):
+    def __init__(
+        self,
+        game_repo: GameRepository,
+        rawg_client: RAWGClient,
+        settings: Settings,
+        event_publisher: Optional[EventPublisher] = None,
+    ):
         self.game_repo = game_repo
         self.rawg_client = rawg_client
         self.settings = settings
+        self.event_publisher = event_publisher
 
     async def list_games(self, query: GameQuery) -> GameListResponse:
         offset = (query.page - 1) * query.page_size
@@ -70,7 +79,30 @@ class GameAppService:
         data["short_screenshots"] = screenshots_data.get("results", [])
         domain_game = GameFactory.from_rawg(data)
         domain_game.id = slug or str(domain_game.rawg_id) or domain_game.id
+
         saved = await self.game_repo.upsert_game(domain_game)
+
+        # Публикуем событие синхронизации
+        if self.event_publisher:
+            try:
+                event = GameSyncedEvent(
+                    game_id=saved.id,
+                    rawg_id=saved.rawg_id,
+                    name=saved.name,
+                    slug=saved.slug,
+                    platforms=[p.name for p in saved.platforms],
+                    genres=[g.name for g in saved.genres],
+                    rating=saved.rating,
+                    release_date=saved.release_date.isoformat() if saved.release_date else None,
+                )
+                await self.event_publisher.publish(event)
+            except Exception as e:
+                # Логируем ошибку, но не прерываем выполнение
+                from game_service.core.logging import get_logger
+
+                log = get_logger(__name__)
+                log.error(f"Failed to publish game_synced event: {e}")
+
         return self._to_detail_response(saved)
 
     async def sync_games_batch(
@@ -129,11 +161,33 @@ class GameAppService:
 
                 # Сохраняем только если игра новая или нет деталей
                 if is_new or not has_details:
-                    await self.game_repo.upsert_game(domain_game)
+                    saved_game = await self.game_repo.upsert_game(domain_game)
                     if is_new:
                         total_new += 1
                     else:
                         total_updated += 1
+
+                    # Публикуем событие синхронизации для новых игр
+                    if self.event_publisher and is_new:
+                        try:
+                            event = GameSyncedEvent(
+                                game_id=saved_game.id,
+                                rawg_id=saved_game.rawg_id,
+                                name=saved_game.name,
+                                slug=saved_game.slug,
+                                platforms=[p.name for p in saved_game.platforms],
+                                genres=[g.name for g in saved_game.genres],
+                                rating=saved_game.rating,
+                                release_date=saved_game.release_date.isoformat()
+                                if saved_game.release_date
+                                else None,
+                            )
+                            await self.event_publisher.publish(event)
+                        except Exception as e:
+                            from game_service.core.logging import get_logger
+
+                            log = get_logger(__name__)
+                            log.error(f"Failed to publish game_synced event: {e}")
 
                 total_synced += 1
 
@@ -152,9 +206,31 @@ class GameAppService:
                         full_data["short_screenshots"] = screenshots_data.get("results", [])
                         full_game = GameFactory.from_rawg(full_data)
                         full_game.id = domain_game.id
-                        await self.game_repo.upsert_game(full_game)
+                        saved_full = await self.game_repo.upsert_game(full_game)
                         requests_used += 2
                         details_loaded += 1
+
+                        # Публикуем событие обновления игры с деталями
+                        if self.event_publisher:
+                            try:
+                                event = GameSyncedEvent(
+                                    game_id=saved_full.id,
+                                    rawg_id=saved_full.rawg_id,
+                                    name=saved_full.name,
+                                    slug=saved_full.slug,
+                                    platforms=[p.name for p in saved_full.platforms],
+                                    genres=[g.name for g in saved_full.genres],
+                                    rating=saved_full.rating,
+                                    release_date=saved_full.release_date.isoformat()
+                                    if saved_full.release_date
+                                    else None,
+                                )
+                                await self.event_publisher.publish(event)
+                            except Exception as e:
+                                from game_service.core.logging import get_logger
+
+                                log = get_logger(__name__)
+                                log.error(f"Failed to publish game_synced event: {e}")
                     except Exception:
                         # Игнорируем ошибки при загрузке деталей
                         pass

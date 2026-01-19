@@ -40,6 +40,12 @@ class Settings(BaseSettings):
     rawg_base_url: AnyHttpUrl = Field(default="https://api.rawg.io/api")
     rawg_api_key: str = Field(default="CHANGE_ME")
 
+    # --- RabbitMQ ---
+    rabbitmq_url: str = Field(
+        default="amqp://guest:guest@localhost:5672/",
+        description="RabbitMQ connection URL",
+    )
+
     public_base_url: Optional[AnyHttpUrl] = None
     hostname: str = Field(default_factory=socket.gethostname)
 
