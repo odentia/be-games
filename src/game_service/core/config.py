@@ -32,7 +32,7 @@ class Settings(BaseSettings):
 
     # Database connection parameters (can be overridden by DATABASE_URL)
     database_host: str = Field(default="localhost")
-    database_port: int = Field(default=5437)
+    database_port: int = Field(default=5439)
     database_user: str = Field(default="postgres")
     database_password: str = Field(default="password")
     database_name: str = Field(default="games")
