@@ -61,7 +61,7 @@ async def init_engine(url: str, echo: bool = False) -> AsyncEngine:
         try:
             async with _engine.connect() as conn:
                 # Простой тест подключения
-                result = await conn.execute(text("SELECT 1"))
+                await conn.execute(text("SELECT 1"))
                 await conn.commit()
                 log.info("database connection test successful", extra={"database": db_name})
                 
