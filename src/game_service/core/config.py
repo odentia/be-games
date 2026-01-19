@@ -32,7 +32,7 @@ class Settings(BaseSettings):
 
     # Database connection parameters (can be overridden by DATABASE_URL)
     database_host: str = Field(default="localhost")
-    database_port: int = Field(default=5432)
+    database_port: int = Field(default=5437)
     database_user: str = Field(default="postgres")
     database_password: str = Field(default="password")
     database_name: str = Field(default="games")
@@ -102,6 +102,12 @@ class Settings(BaseSettings):
     rabbitmq_url: str = Field(
         default="amqp://guest:guest@localhost:5672/",
         description="RabbitMQ connection URL",
+    )
+
+    # --- CORS ---
+    cors_allow_origins: list[str] = Field(
+        default=["http://localhost:3000"],
+        description="Allowed CORS origins",
     )
 
     public_base_url: Optional[AnyHttpUrl] = None
