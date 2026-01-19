@@ -9,6 +9,7 @@ from game_service.clients.rawg_client import RAWGClient
 from game_service.core.config import Settings
 from game_service.services.game_service import GameAppService
 from game_service.repo.sql.repositories import SQLGameRepository
+from game_service.mq.publisher import EventPublisher
 
 
 def get_settings(request: Request) -> Settings:
@@ -44,9 +45,22 @@ async def get_rawg_client(
         await client.close()
 
 
+def get_event_publisher(request: Request) -> EventPublisher:
+    publisher = getattr(request.app.state, "event_publisher", None)
+    if not publisher:
+        raise RuntimeError("Event publisher is not initialized")
+    return publisher
+
+
 def get_game_service(
     game_repo: Annotated[SQLGameRepository, Depends(get_game_repository)],
     rawg_client: Annotated[RAWGClient, Depends(get_rawg_client)],
     settings: Annotated[Settings, Depends(get_settings)],
+    event_publisher: Annotated[EventPublisher, Depends(get_event_publisher)],
 ) -> GameAppService:
-    return GameAppService(game_repo=game_repo, rawg_client=rawg_client, settings=settings)
+    return GameAppService(
+        game_repo=game_repo,
+        rawg_client=rawg_client,
+        settings=settings,
+        event_publisher=event_publisher,
+    )
