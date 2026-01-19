@@ -18,18 +18,18 @@ async def handle_comment_deleted(event_data: dict):
     try:
         entity_id = event_data.get("entity_id")
         entity_type = event_data.get("entity_type")
-        
+
         if entity_type != "game":
             return
-        
+
         if not entity_id:
             log.warning(f"Invalid event data for comment_deleted: {event_data}")
             return
-        
+
         # Здесь можно добавить логику обновления статистики игры
         # Например, обновление счетчика комментариев
         log.debug(f"Comment deleted for game {entity_id}")
-                
+
     except Exception as e:
         log.error(f"Error handling comment_deleted event: {e}")
 
@@ -67,10 +67,10 @@ def build_lifespan(settings: Settings):
             # Initialize event consumer
             consumer = EventConsumer(settings)
             await consumer.connect()
-            
+
             # Регистрируем обработчики событий
             consumer.register_handler("comment_deleted", handle_comment_deleted)
-            
+
             # Запускаем consumer в фоновой задаче
             consumer_task = asyncio.create_task(start_consumer(consumer))
             app.state.consumer = consumer
@@ -93,19 +93,19 @@ def build_lifespan(settings: Settings):
             app.state.ready = False
 
             # Останавливаем consumer
-            if hasattr(app.state, 'consumer_task') and app.state.consumer_task:
+            if hasattr(app.state, "consumer_task") and app.state.consumer_task:
                 app.state.consumer_task.cancel()
                 try:
                     await app.state.consumer_task
                 except asyncio.CancelledError:
                     pass
-            
-            if hasattr(app.state, 'consumer'):
+
+            if hasattr(app.state, "consumer"):
                 await app.state.consumer.close()
                 log.info("Event consumer closed")
 
             # Close event publisher
-            if hasattr(app.state, 'event_publisher'):
+            if hasattr(app.state, "event_publisher"):
                 await app.state.event_publisher.close()
                 log.info("Event publisher closed")
 

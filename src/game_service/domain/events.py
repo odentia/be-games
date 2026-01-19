@@ -7,6 +7,7 @@ from typing import Optional, List
 
 class GameEvent(BaseModel):
     """Базовое событие игры"""
+
     event_type: str
     timestamp: datetime = datetime.utcnow()
     service: str = "game-service"
@@ -14,6 +15,7 @@ class GameEvent(BaseModel):
 
 class GameSyncedEvent(GameEvent):
     """Событие синхронизации игры из RAWG API"""
+
     event_type: str = "game_synced"
     game_id: str
     rawg_id: int
@@ -27,6 +29,7 @@ class GameSyncedEvent(GameEvent):
 
 class GameUpdatedEvent(GameEvent):
     """Событие обновления игры"""
+
     event_type: str = "game_updated"
     game_id: str
     rawg_id: int

@@ -79,9 +79,9 @@ class GameAppService:
         data["short_screenshots"] = screenshots_data.get("results", [])
         domain_game = GameFactory.from_rawg(data)
         domain_game.id = slug or str(domain_game.rawg_id) or domain_game.id
-        
+
         saved = await self.game_repo.upsert_game(domain_game)
-        
+
         # Публикуем событие синхронизации
         if self.event_publisher:
             try:
@@ -99,9 +99,10 @@ class GameAppService:
             except Exception as e:
                 # Логируем ошибку, но не прерываем выполнение
                 from game_service.core.logging import get_logger
+
                 log = get_logger(__name__)
                 log.error(f"Failed to publish game_synced event: {e}")
-        
+
         return self._to_detail_response(saved)
 
     async def sync_games_batch(
@@ -165,7 +166,7 @@ class GameAppService:
                         total_new += 1
                     else:
                         total_updated += 1
-                    
+
                     # Публикуем событие синхронизации для новых игр
                     if self.event_publisher and is_new:
                         try:
@@ -177,11 +178,14 @@ class GameAppService:
                                 platforms=[p.name for p in saved_game.platforms],
                                 genres=[g.name for g in saved_game.genres],
                                 rating=saved_game.rating,
-                                release_date=saved_game.release_date.isoformat() if saved_game.release_date else None,
+                                release_date=saved_game.release_date.isoformat()
+                                if saved_game.release_date
+                                else None,
                             )
                             await self.event_publisher.publish(event)
                         except Exception as e:
                             from game_service.core.logging import get_logger
+
                             log = get_logger(__name__)
                             log.error(f"Failed to publish game_synced event: {e}")
 
@@ -205,7 +209,7 @@ class GameAppService:
                         saved_full = await self.game_repo.upsert_game(full_game)
                         requests_used += 2
                         details_loaded += 1
-                        
+
                         # Публикуем событие обновления игры с деталями
                         if self.event_publisher:
                             try:
@@ -217,11 +221,14 @@ class GameAppService:
                                     platforms=[p.name for p in saved_full.platforms],
                                     genres=[g.name for g in saved_full.genres],
                                     rating=saved_full.rating,
-                                    release_date=saved_full.release_date.isoformat() if saved_full.release_date else None,
+                                    release_date=saved_full.release_date.isoformat()
+                                    if saved_full.release_date
+                                    else None,
                                 )
                                 await self.event_publisher.publish(event)
                             except Exception as e:
                                 from game_service.core.logging import get_logger
+
                                 log = get_logger(__name__)
                                 log.error(f"Failed to publish game_synced event: {e}")
                     except Exception:

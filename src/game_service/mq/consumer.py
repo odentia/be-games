@@ -37,9 +37,7 @@ class EventConsumer:
             await self.connect()
 
         exchange = await self.channel.declare_exchange(
-            "blog_events",
-            aio_pika.ExchangeType.TOPIC,
-            durable=True
+            "blog_events", aio_pika.ExchangeType.TOPIC, durable=True
         )
 
         queue = await self.channel.declare_queue(
@@ -47,12 +45,12 @@ class EventConsumer:
             durable=True,
             arguments={
                 "x-dead-letter-exchange": "dead_letters",
-                "x-dead-letter-routing-key": "games_events_dl"
-            }
+                "x-dead-letter-routing-key": "games_events_dl",
+            },
         )
 
         await queue.bind(exchange, "games.*")
-        
+
         # Также биндим на возможные события от других сервисов
         # Например, если нужно слушать события комментариев при удалении игры
         await queue.bind(exchange, "comments.comment_deleted")
@@ -65,7 +63,7 @@ class EventConsumer:
                     try:
                         event_data = json.loads(message.body.decode())
                         routing_key = message.routing_key or ""
-                        
+
                         # Определяем тип события по routing_key или по event_type в теле сообщения
                         if routing_key.startswith("games."):
                             event_type = event_data.get("event_type")
@@ -77,9 +75,13 @@ class EventConsumer:
 
                         if event_type and event_type in self.handlers:
                             await self.handlers[event_type](event_data)
-                            logger.debug(f"Event processed: {event_type} (routing_key: {routing_key})")
+                            logger.debug(
+                                f"Event processed: {event_type} (routing_key: {routing_key})"
+                            )
                         else:
-                            logger.warning(f"No handler for event type: {event_type} (routing_key: {routing_key})")
+                            logger.warning(
+                                f"No handler for event type: {event_type} (routing_key: {routing_key})"
+                            )
 
                     except Exception as e:
                         logger.error(f"Error processing message: {e}")
