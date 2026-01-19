@@ -50,7 +50,9 @@ class Settings(BaseSettings):
 
         encoded_password = quote_plus(self.database_password)
         user_pass = f"{self.database_user}:{encoded_password}"
-        host_port_db = f"{self.database_host}:{self.database_port}/{self.database_name}"
+        host_port_db = (
+            f"{self.database_host}:{self.database_port}/{self.database_name}"
+        )
         return f"postgresql://{user_pass}@{host_port_db}"
 
     def model_post_init(self, __context) -> None:
@@ -61,7 +63,9 @@ class Settings(BaseSettings):
 
             encoded_password = quote_plus(self.database_password)
             user_pass = f"{self.database_user}:{encoded_password}"
-            host_port_db = f"{self.database_host}:{self.database_port}/{self.database_name}"
+            host_port_db = (
+                f"{self.database_host}:{self.database_port}/{self.database_name}"
+            )
             self.database_url = f"postgresql+asyncpg://{user_pass}@{host_port_db}"
             # Log for debugging (password hidden)
             import logging
