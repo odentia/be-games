@@ -176,7 +176,7 @@ sudo tail -f /var/log/auth.log
 sudo journalctl -u ssh -f
 ```
 
-**Убедитесь, что публичный ключ в authorized_keys соответствует приватному ключу в GitHub Secrets!**
+**Убедитесь,  что публичный ключ в authorized_keys соответствует приватному ключу в GitHub Secrets!**
 
 ## Проверка деплоя на сервере
 
