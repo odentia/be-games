@@ -104,18 +104,40 @@ jobs:
             docker compose pull
             
             # Проверяем переменные окружения перед запуском (для отладки)
-            echo "=== Checking DATABASE_URL (showing only database name) ==="
-            echo "${{ secrets.DATABASE_URL }}" | sed 's/.*\/\([^\/]*\)$/\1/' || echo "ERROR: Could not parse DATABASE_URL"
-            echo "=== Checking ALEMBIC_DATABASE_URL (showing only database name) ==="
-            echo "${{ secrets.ALEMBIC_DATABASE_URL }}" | sed 's/.*\/\([^\/]*\)$/\1/' || echo "ERROR: Could not parse ALEMBIC_DATABASE_URL"
+            echo "=== Checking DATABASE_URL (database name only) ==="
+            DB_NAME=$(echo "${{ secrets.DATABASE_URL }}" | grep -oE '/[^/?#]+$' | sed 's|^/||' | sed 's|/.*$||')
+            echo "Database name: $DB_NAME"
+            if [ "$DB_NAME" = "games_user" ]; then
+              echo "❌ ERROR: Database name is 'games_user' (wrong - should be 'games')"
+            elif [ "$DB_NAME" = "games" ]; then
+              echo "✅ Database name is correct: 'games'"
+            else
+              echo "⚠️  Database name: '$DB_NAME'"
+            fi
+            echo "=== Checking ALEMBIC_DATABASE_URL (database name only) ==="
+            ALEMBIC_DB_NAME=$(echo "${{ secrets.ALEMBIC_DATABASE_URL }}" | grep -oE '/[^/?#]+$' | sed 's|^/||' | sed 's|/.*$||')
+            echo "Database name: $ALEMBIC_DB_NAME"
+            if [ "$ALEMBIC_DB_NAME" = "games_user" ]; then
+              echo "❌ ERROR: Database name is 'games_user' (wrong - should be 'games')"
+            elif [ "$ALEMBIC_DB_NAME" = "games" ]; then
+              echo "✅ Database name is correct: 'games'"
+            else
+              echo "⚠️  Database name: '$ALEMBIC_DB_NAME'"
+            fi
             
             docker compose run --rm game-service uv run alembic upgrade head || echo "Migration failed or not needed"
             docker compose up -d
             
             # Проверяем переменные внутри запущенного контейнера (показываем только имя базы)
-            echo "=== Checking DATABASE_URL in container (database name only) ==="
-            docker compose exec -T game-service sh -c 'echo $DATABASE_URL' | sed 's/.*\/\([^\/]*\)$/\1/' || echo "Container not running yet"
-            echo "=== Checking ALEMBIC_DATABASE_URL in container (database name only) ==="
-            docker compose exec -T game-service sh -c 'echo $ALEMBIC_DATABASE_URL' | sed 's/.*\/\([^\/]*\)$/\1/' || echo "Container not running yet"
+            echo "=== Checking DATABASE_URL in container ==="
+            CONTAINER_DB_NAME=$(docker compose exec -T game-service sh -c 'echo $DATABASE_URL' 2>/dev/null | grep -oE '/[^/?#]+$' | sed 's|^/||' | sed 's|/.*$||' || echo "")
+            if [ -z "$CONTAINER_DB_NAME" ]; then
+              echo "Container not running yet or variable not set"
+            else
+              echo "Database name in container: $CONTAINER_DB_NAME"
+              if [ "$CONTAINER_DB_NAME" = "games_user" ]; then
+                echo "❌ ERROR: Wrong database name in container!"
+              fi
+            fi
             
             docker image prune -f
