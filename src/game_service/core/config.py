@@ -88,9 +88,7 @@ class Settings(BaseSettings):
                     "database_user": self.database_user,
                     "database_name": self.database_name,
                     "database_password_length": len(self.database_password),
-                    "database_url": self.database_url.replace(
-                        f":{encoded_password}@", ":***@"
-                    ),
+                    "database_url": self.database_url.replace(f":{encoded_password}@", ":***@"),
                 },
             )
 
