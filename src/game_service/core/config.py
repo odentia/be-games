@@ -45,13 +45,21 @@ class Settings(BaseSettings):
         """Build Alembic database URL from parameters"""
         if self.alembic_database_url:
             return self.alembic_database_url
-        # URL encode password to handle special characters
         from urllib.parse import quote_plus
 
         encoded_password = quote_plus(self.database_password)
-        user_pass = f"{self.database_user}:{encoded_password}"
-        host_db = f"{self.database_host}:{self.database_port}/{self.database_name}"
-        return f"postgresql://{user_pass}@{host_db}"
+        return (
+            "postgresql://"
+            + self.database_user
+            + ":"
+            + encoded_password
+            + "@"
+            + self.database_host
+            + ":"
+            + str(self.database_port)
+            + "/"
+            + self.database_name
+        )
 
     def model_post_init(self, __context) -> None:
         """Build database_url from parameters if not provided"""
@@ -60,9 +68,18 @@ class Settings(BaseSettings):
             from urllib.parse import quote_plus
 
             encoded_password = quote_plus(self.database_password)
-            user_pass = f"{self.database_user}:{encoded_password}"
-            host_db = f"{self.database_host}:{self.database_port}/{self.database_name}"
-            self.database_url = f"postgresql+asyncpg://{user_pass}@{host_db}"
+            self.database_url = (
+                "postgresql+asyncpg://"
+                + self.database_user
+                + ":"
+                + encoded_password
+                + "@"
+                + self.database_host
+                + ":"
+                + str(self.database_port)
+                + "/"
+                + self.database_name
+            )
             # Log for debugging (password hidden)
             import logging
 
